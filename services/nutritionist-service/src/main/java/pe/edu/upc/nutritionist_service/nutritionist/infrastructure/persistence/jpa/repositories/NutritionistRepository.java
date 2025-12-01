@@ -7,6 +7,6 @@ import pe.edu.upc.nutritionist_service.nutritionist.domain.model.aggregates.Nutr
 import java.util.Optional;
 
 @Repository
-public interface NutritionistRepository extends JpaRepository<Nutritionist, Integer> {
+public interface NutritionistRepository extends JpaRepository<Nutritionist, Long> {
     Optional<Nutritionist> findByUserId(Long userId);
 }
