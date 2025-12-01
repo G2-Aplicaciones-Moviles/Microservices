@@ -52,6 +52,18 @@ public class IngredientsController {
         return ResponseEntity.ok(ingredientResources);
     }
 
+    @GetMapping("/{ingredientId}")
+    public ResponseEntity<IngredientResource> getIngredientById(@PathVariable int ingredientId) {
+        var getIngredientByIdQuery = new GetIngredientsByIdQuery(ingredientId);
+        var optionalIngredient = this.ingredientQueryService.handle(getIngredientByIdQuery);
+
+        if (optionalIngredient.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        var ingredientResource = IngredientResourceFromEntityAssembler.toResourceFromEntity(optionalIngredient.get());
+        return ResponseEntity.ok(ingredientResource);
+    }
+
     @DeleteMapping("/{ingredientId}")
     public ResponseEntity<?> deleteRecipe(@PathVariable int ingredientId) {
         var deleteIngredientCommand = new DeleteIngredientCommand(ingredientId);

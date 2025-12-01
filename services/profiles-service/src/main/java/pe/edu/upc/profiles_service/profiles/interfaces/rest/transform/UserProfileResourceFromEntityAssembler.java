@@ -10,7 +10,7 @@ public class UserProfileResourceFromEntityAssembler {
 
     public static UserProfileResource toResourceFromEntity(UserProfile entity) {
         return new UserProfileResource(
-                entity.getId(),
+                entity.getId().intValue(),
                 entity.getGender(),
                 entity.getHeight(),
                 entity.getWeight(),
