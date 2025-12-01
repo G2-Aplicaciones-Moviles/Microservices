@@ -10,13 +10,13 @@ public class UserResourceFromEntityAssembler {
 
     public static ProfileResource toResourceFromEntity(Profile profile) {
         return new ProfileResource(
-                profile.getId(),
+                profile.getId().intValue(),
                 profile.getName(),
                 profile.getEmail(),
                 profile.getPassword(),
                 profile.getIsActive(),
                 profile.getBirthDate(),
-                profile.getUserProfile().getId()
+                profile.getUserProfile().getId().intValue()
         );
     }
 
