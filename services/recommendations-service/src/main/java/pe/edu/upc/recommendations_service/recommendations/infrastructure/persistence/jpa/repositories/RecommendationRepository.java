@@ -12,6 +12,7 @@ public interface RecommendationRepository extends JpaRepository<Recommendation, 
     List<Recommendation> findAllByUserId_Value(Long userId);
 
     List<Recommendation> findByTemplateAndUserIdIsNull(RecommendationTemplate template);
+
     Optional<Recommendation> findFirstByTemplateAndUserIdIsNull(RecommendationTemplate template);
 
     @Query("SELECT r FROM Recommendation r WHERE r.userId IS NULL")

@@ -1,7 +1,7 @@
 package pe.edu.upc.recommendations_service.recommendations.interfaces.rest.transform;
 
-import pe.edu.upc.center.jameoFit.recommendations.domain.model.commands.CreateRecommendationCommand;
-import pe.edu.upc.center.jameoFit.recommendations.interfaces.rest.resources.CreateRecommendationResource;
+import pe.edu.upc.recommendations_service.recommendations.domain.model.commands.CreateRecommendationCommand;
+import pe.edu.upc.recommendations_service.recommendations.interfaces.rest.resources.CreateRecommendationResource;
 
 public class CreateRecommendationCommandFromResourceAssembler {
     public static CreateRecommendationCommand toCommandFromResource(CreateRecommendationResource resource) {

@@ -12,4 +12,5 @@ public record RecommendationResource(
         Double score,
         String status,
         LocalDateTime assignedAt
-) {}
+) {
+}

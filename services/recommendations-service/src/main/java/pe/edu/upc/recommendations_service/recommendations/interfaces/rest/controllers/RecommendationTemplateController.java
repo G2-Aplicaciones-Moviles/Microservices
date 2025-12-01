@@ -3,9 +3,10 @@ package pe.edu.upc.recommendations_service.recommendations.interfaces.rest.contr
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import pe.edu.upc.center.jameoFit.recommendations.domain.model.entities.RecommendationTemplate;
-import pe.edu.upc.center.jameoFit.recommendations.infrastructure.persistence.jpa.repositories.RecommendationTemplateRepository;
-import pe.edu.upc.center.jameoFit.recommendations.interfaces.rest.resources.CreateTemplateResource;
+import org.springframework.web.bind.annotation.*;
+import pe.edu.upc.recommendations_service.recommendations.domain.model.entities.RecommendationTemplate;
+import pe.edu.upc.recommendations_service.recommendations.infrastructure.persistence.jpa.repositories.RecommendationTemplateRepository;
+import pe.edu.upc.recommendations_service.recommendations.interfaces.rest.resources.CreateTemplateResource;
 
 import java.net.URI;
 import java.util.List;

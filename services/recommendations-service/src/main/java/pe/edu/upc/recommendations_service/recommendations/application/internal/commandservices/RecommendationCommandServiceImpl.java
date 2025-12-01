@@ -1,6 +1,7 @@
 package pe.edu.upc.recommendations_service.recommendations.application.internal.commandservices;
 
 import org.springframework.stereotype.Service;
+import pe.edu.upc.recommendations_service.recommendations.application.internal.outboundservices.ExternalUserProfileService;
 import pe.edu.upc.recommendations_service.recommendations.domain.model.aggregates.Recommendation;
 import pe.edu.upc.recommendations_service.recommendations.domain.model.commands.AssignRecommendationCommand;
 import pe.edu.upc.recommendations_service.recommendations.domain.model.commands.AutoAssignRecommendationsCommand;
@@ -13,7 +14,6 @@ import pe.edu.upc.recommendations_service.recommendations.domain.services.Recomm
 import pe.edu.upc.recommendations_service.recommendations.domain.services.RecommendationTemplateService;
 import pe.edu.upc.recommendations_service.recommendations.infrastructure.persistence.jpa.repositories.RecommendationRepository;
 import pe.edu.upc.recommendations_service.recommendations.interfaces.rest.resources.UpdateRecommendationResource;
-import pe.edu.upc.recommendations_service.tracking.application.internal.outboundservices.acl.ExternalUserProfileService;
 
 import java.util.List;
 import java.util.Optional;
