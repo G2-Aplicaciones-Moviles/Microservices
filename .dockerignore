@@ -1,0 +1,4 @@
+.git
+services/goals-service/.mvn/
+.idea/
+**/*.iml
