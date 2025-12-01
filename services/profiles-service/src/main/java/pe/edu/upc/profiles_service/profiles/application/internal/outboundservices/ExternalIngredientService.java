@@ -1,95 +1,52 @@
 package pe.edu.upc.profiles_service.profiles.application.internal.outboundservices;
 
-import org.springframework.stereotype.Service;
-import pe.edu.upc.profiles_service.profiles.application.internal.outboundservices.acl.rest.RecipesIntegrationClient;
 import pe.edu.upc.profiles_service.profiles.application.internal.outboundservices.acl.rest.resource.IngredientResource;
 
 import java.util.List;
 import java.util.Optional;
 
 /**
- * Servicio para validar ingredientes desde recipes-service
+ * Service interface for validating and retrieving ingredient information
+ * from the recipes-service.
  */
-@Service
-public class ExternalIngredientService {
-
-    private final RecipesIntegrationClient recipesClient;
-
-    public ExternalIngredientService(RecipesIntegrationClient recipesClient) {
-        this.recipesClient = recipesClient;
-    }
+public interface ExternalIngredientService {
 
     /**
-     * Verifica si existe un ingrediente por nombre
+     * Checks if an ingredient exists by name.
+     *
+     * @param name the name of the ingredient
+     * @return true if the ingredient exists, false otherwise
      */
-    public boolean existsByName(String name) {
-        if (name == null || name.trim().isEmpty()) {
-            return false;
-        }
-        try {
-            List<IngredientResource> ingredients = recipesClient.getAllIngredients();
-            return ingredients.stream()
-                    .anyMatch(ingredient -> ingredient.name().equalsIgnoreCase(name.trim()));
-        } catch (Exception e) {
-            // Log error y retornar false si el servicio no está disponible
-            System.err.println("Error al consultar recipes-service: " + e.getMessage());
-            return false;
-        }
-    }
+    boolean existsByName(String name);
 
     /**
-     * Verifica si existe un ingrediente por ID
+     * Checks if an ingredient exists by ID.
+     *
+     * @param id the ID of the ingredient
+     * @return true if the ingredient exists, false otherwise
      */
-    public boolean existsById(int id) {
-        try {
-            Optional<IngredientResource> ingredient = recipesClient.getIngredientById(id);
-            return ingredient.isPresent();
-        } catch (Exception e) {
-            System.err.println("Error al consultar recipes-service: " + e.getMessage());
-            return false;
-        }
-    }
+    boolean existsById(int id);
 
     /**
-     * Obtiene un ingrediente por nombre
+     * Finds an ingredient by name.
+     *
+     * @param name the name of the ingredient
+     * @return an Optional containing the ingredient if found, empty otherwise
      */
-    public Optional<IngredientResource> findByName(String name) {
-        if (name == null || name.trim().isEmpty()) {
-            return Optional.empty();
-        }
-        try {
-            List<IngredientResource> ingredients = recipesClient.getAllIngredients();
-            return ingredients.stream()
-                    .filter(ingredient -> ingredient.name().equalsIgnoreCase(name.trim()))
-                    .findFirst();
-        } catch (Exception e) {
-            System.err.println("Error al consultar recipes-service: " + e.getMessage());
-            return Optional.empty();
-        }
-    }
+    Optional<IngredientResource> findByName(String name);
 
     /**
-     * Obtiene un ingrediente por ID
+     * Finds an ingredient by ID.
+     *
+     * @param id the ID of the ingredient
+     * @return an Optional containing the ingredient if found, empty otherwise
      */
-    public Optional<IngredientResource> findById(int id) {
-        try {
-            return recipesClient.getIngredientById(id);
-        } catch (Exception e) {
-            System.err.println("Error al consultar recipes-service: " + e.getMessage());
-            return Optional.empty();
-        }
-    }
+    Optional<IngredientResource> findById(int id);
 
     /**
-     * Obtiene todos los ingredientes
+     * Retrieves all ingredients.
+     *
+     * @return a list of all ingredients
      */
-    public List<IngredientResource> findAll() {
-        try {
-            return recipesClient.getAllIngredients();
-        } catch (Exception e) {
-            System.err.println("Error al consultar recipes-service: " + e.getMessage());
-            return List.of();
-        }
-    }
+    List<IngredientResource> findAll();
 }
-
