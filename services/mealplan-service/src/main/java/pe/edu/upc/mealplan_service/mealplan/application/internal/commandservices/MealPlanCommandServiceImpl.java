@@ -37,10 +37,9 @@ public class MealPlanCommandServiceImpl implements MealPlanCommandService {
                     return tag;
                 }).toList();
 
-        // add through VO
         mealPlan.getTags().addItems(tagEntities);
 
-        try{
+        try {
             this.mealPlanRepository.save(mealPlan);
         } catch (Exception e) {
             throw new IllegalArgumentException("Error while saving meal plan: " + e.getMessage());
@@ -50,11 +49,11 @@ public class MealPlanCommandServiceImpl implements MealPlanCommandService {
 
     @Override
     public void handle(DeleteMealPlanCommand command) {
-        if(command == null || command.mealPlanId() <= 0) {
+        if (command == null || command.mealPlanId() <= 0) {
             throw new IllegalArgumentException("MealPlan ID not found");
         }
         var optionalMealPlan = this.mealPlanRepository.findById(command.mealPlanId());
-        this.mealPlanRepository.deleteById(optionalMealPlan.get().getId());
+        this.mealPlanRepository.deleteById(optionalMealPlan.get().getId().intValue());
 
     }
 
@@ -65,7 +64,6 @@ public class MealPlanCommandServiceImpl implements MealPlanCommandService {
 
         var mealPlan = mealPlanOptional.get();
 
-        // Update meal plan details
         mealPlan.setName(command.name());
         mealPlan.setDescription(command.description());
         mealPlan.setMacros(new MealPlanMacros(
@@ -74,7 +72,6 @@ public class MealPlanCommandServiceImpl implements MealPlanCommandService {
         mealPlan.setCategory(command.category());
         mealPlan.setIsCurrent(command.isCurrent());
 
-        //Update entries
         List<MealPlanEntry> newEntries = new ArrayList<>();
         for (var entryCommand : command.entries()) {
             var mealPlanType = mealPlanTypeRepository.findById(entryCommand.mealPlanTypeId())
@@ -90,13 +87,11 @@ public class MealPlanCommandServiceImpl implements MealPlanCommandService {
         }
         mealPlan.getEntries().replaceWith(newEntries);
 
-        // Update tags
         List<MealPlanTag> newTags = command.tags().stream()
-                .map(tagStr -> new MealPlanTag(tagStr, mealPlan)) // crea tags
+                .map(tagStr -> new MealPlanTag(tagStr, mealPlan))
                 .toList();
         mealPlan.getTags().replaceWith(newTags);
 
-        //persist changes
         var updatedMealPlan = mealPlanRepository.save(mealPlan);
 
         return Optional.of(updatedMealPlan);

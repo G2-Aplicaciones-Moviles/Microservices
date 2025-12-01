@@ -22,7 +22,7 @@ public class MealPlanTypeCommandServiceImpl implements MealPlanTypeCommandServic
     public void handle(SeedMealPlanTypesCommand command) {
         Arrays.stream(MealPlanTypes.values())
                 .forEach(mealPlanType -> {
-                    if (!mealPlanTypeRepository.existsByType(mealPlanType)){
+                    if (!mealPlanTypeRepository.existsByType(mealPlanType)) {
                         mealPlanTypeRepository.save(new MealPlanType(MealPlanTypes.valueOf(mealPlanType.name())));
                     }
                 });

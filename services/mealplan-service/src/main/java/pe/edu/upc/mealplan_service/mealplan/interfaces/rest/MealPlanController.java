@@ -24,8 +24,6 @@ import pe.edu.upc.mealplan_service.mealplan.interfaces.rest.transform.CreateMeal
 import pe.edu.upc.mealplan_service.mealplan.interfaces.rest.transform.CreateMealPlanEntryCommandFromResourceAssembler;
 import pe.edu.upc.mealplan_service.mealplan.interfaces.rest.transform.MealPlanResourceFromEntityAssembler;
 import pe.edu.upc.mealplan_service.mealplan.interfaces.rest.transform.UpdateMealPlanCommandFromResourceAssembler;
-import pe.edu.upc.center.jameoFit.recipes.domain.model.queries.GetAllRecipesQuery;
-import pe.edu.upc.center.jameoFit.recipes.interfaces.rest.resources.RecipeResource;
 
 import java.util.List;
 
@@ -38,7 +36,7 @@ public class MealPlanController {
     private final MealPlanEntryCommandService mealPlanEntryCommandService;
 
     public MealPlanController(MealPlanQueryService mealPlanQueryService, MealPlanCommandService mealPlanCommandService
-    , MealPlanEntryCommandService mealPlanEntryCommandService) {
+            , MealPlanEntryCommandService mealPlanEntryCommandService) {
         this.mealPlanQueryService = mealPlanQueryService;
         this.mealPlanCommandService = mealPlanCommandService;
         this.mealPlanEntryCommandService = mealPlanEntryCommandService;
@@ -57,10 +55,10 @@ public class MealPlanController {
                                     schema = @Schema(implementation = MealPlanResource.class)
                             )
                     ),
-                    @ApiResponse (
+                    @ApiResponse(
                             responseCode = "400",
                             description = "Bad Request",
-                            content = @Content (
+                            content = @Content(
                                     mediaType = "application/json",
                                     schema = @Schema(implementation = RuntimeException.class)
                             )
@@ -77,7 +75,7 @@ public class MealPlanController {
             return ResponseEntity.badRequest().build();
         }
         // Fetch meal plan
-        var getMealPlanByIdQuery = new GetMealPlanByIdQuery(mealPlanEntity.get().getId());
+        var getMealPlanByIdQuery = new GetMealPlanByIdQuery(mealPlanEntity.get().getId().intValue());
         var mealplan = this.mealPlanQueryService.handle(getMealPlanByIdQuery);
         if (mealplan.isEmpty()) {
             return ResponseEntity.badRequest().build();
@@ -87,22 +85,16 @@ public class MealPlanController {
         return new ResponseEntity<>(MealPlanResourceFromEntityAssembler.toResourceFromEntity(mealplan.get()), HttpStatus.CREATED);
 
     }
+
     @GetMapping
     public ResponseEntity<List<MealPlanResource>> getAllMealPlans() {
         var getAllMealPlansQuery = new GetAllMealPlanQuery();
-        var mealPlans = this.mealPlanQueryService.handle(
-                getAllMealPlansQuery);
+        var mealPlans = this.mealPlanQueryService.handle(getAllMealPlansQuery);
         return ResponseEntity.ok(
                 mealPlans.stream()
                         .map(MealPlanResourceFromEntityAssembler::toResourceFromEntity)
                         .toList()
         );
-    }
-    @GetMapping("/recipes")
-    public ResponseEntity<List<RecipeResource>> getAllRecipes() {
-        var getAllRecipesQuery = new GetAllRecipesQuery();
-        var recipes = mealPlanQueryService.handle(getAllRecipesQuery);
-        return ResponseEntity.ok(recipes);
     }
 
     @GetMapping("/detailed/{mealPlanId}")
@@ -148,5 +140,4 @@ public class MealPlanController {
             return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
         }
     }
-
 }

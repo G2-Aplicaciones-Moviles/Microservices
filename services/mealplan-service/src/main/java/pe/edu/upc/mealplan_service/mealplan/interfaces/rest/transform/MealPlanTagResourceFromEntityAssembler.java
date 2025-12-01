@@ -6,14 +6,14 @@ import pe.edu.upc.mealplan_service.mealplan.interfaces.rest.resources.MealPlanTa
 import java.util.List;
 
 public class MealPlanTagResourceFromEntityAssembler {
+
     public static List<MealPlanTagResource> toResourceFromEntity(List<MealPlanTag> entities) {
         return entities.stream()
                 .map(entity -> new MealPlanTagResource(
                         entity.getId(),
                         entity.getTag(),
-                        entity.getMealPlan().getId()
+                        entity.getMealPlan().getId().intValue()
                 ))
                 .toList();
     }
-    }
-
+}

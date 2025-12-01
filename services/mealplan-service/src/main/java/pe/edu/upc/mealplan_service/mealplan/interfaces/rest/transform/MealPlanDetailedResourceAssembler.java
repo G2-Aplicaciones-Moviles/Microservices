@@ -3,17 +3,18 @@ package pe.edu.upc.mealplan_service.mealplan.interfaces.rest.transform;
 import pe.edu.upc.mealplan_service.mealplan.domain.model.aggregates.MealPlan;
 import pe.edu.upc.mealplan_service.mealplan.domain.model.entities.MealPlanTag;
 import pe.edu.upc.mealplan_service.mealplan.interfaces.rest.resources.MealPlanDetailedResource;
-import pe.edu.upc.center.jameoFit.recipes.interfaces.rest.resources.RecipeResource;
+import pe.edu.upc.mealplan_service.mealplan.application.internal.outboundservices.acl.rest.resource.RecipeResource;
 
 import java.util.function.Function;
 
 public class MealPlanDetailedResourceAssembler {
+
     public static MealPlanDetailedResource toResourceFromEntity(
             MealPlan mealPlan,
             Function<Integer, RecipeResource> fetchRecipe
     ) {
         return new MealPlanDetailedResource(
-                mealPlan.getId(),
+                mealPlan.getId().intValue(),
                 mealPlan.getName(),
                 mealPlan.getDescription(),
                 mealPlan.getMacros().getCalories(),

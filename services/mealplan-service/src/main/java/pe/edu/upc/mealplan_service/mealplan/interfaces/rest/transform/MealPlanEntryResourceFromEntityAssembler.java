@@ -6,6 +6,7 @@ import pe.edu.upc.mealplan_service.mealplan.interfaces.rest.resources.MealPlanEn
 import java.util.List;
 
 public class MealPlanEntryResourceFromEntityAssembler {
+
     public static List<MealPlanEntryResource> toResourceFromEntities(List<MealPlanEntry> entities) {
         return entities.stream()
                 .map(entity -> new MealPlanEntryResource(
@@ -13,7 +14,7 @@ public class MealPlanEntryResourceFromEntityAssembler {
                         entity.getRecipeId().recipeId(),
                         entity.getDay(),
                         entity.getMealPlanType().getId(),
-                        entity.getMealPlan().getId()
+                        entity.getMealPlan().getId().intValue()
                 ))
                 .toList();
     }

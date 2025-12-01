@@ -5,9 +5,10 @@ import pe.edu.upc.mealplan_service.mealplan.domain.model.entities.MealPlanTag;
 import pe.edu.upc.mealplan_service.mealplan.interfaces.rest.resources.MealPlanResource;
 
 public class MealPlanResourceFromEntityAssembler {
+
     public static MealPlanResource toResourceFromEntity(MealPlan mealPlan) {
         return new MealPlanResource(
-                mealPlan.getId(),
+                mealPlan.getId().intValue(),
                 mealPlan.getName(),
                 mealPlan.getDescription(),
                 mealPlan.getMacros().getCalories(),
@@ -17,7 +18,8 @@ public class MealPlanResourceFromEntityAssembler {
                 mealPlan.getProfileId().userProfileId(),
                 mealPlan.getCategory(),
                 mealPlan.getIsCurrent(),
-                MealPlanEntryResourceFromEntityAssembler.toResourceFromEntities(mealPlan.getEntries().getMealPlanEntries()),
+                MealPlanEntryResourceFromEntityAssembler.toResourceFromEntities(
+                        mealPlan.getEntries().getMealPlanEntries()),
                 mealPlan.getTags().getMealPlanTags()
                         .stream()
                         .map(MealPlanTag::getTag)

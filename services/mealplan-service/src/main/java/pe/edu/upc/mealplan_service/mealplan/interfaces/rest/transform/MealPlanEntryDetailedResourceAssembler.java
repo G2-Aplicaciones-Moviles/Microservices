@@ -2,7 +2,7 @@ package pe.edu.upc.mealplan_service.mealplan.interfaces.rest.transform;
 
 import pe.edu.upc.mealplan_service.mealplan.domain.model.entities.MealPlanEntry;
 import pe.edu.upc.mealplan_service.mealplan.interfaces.rest.resources.MealPlanEntryDetailedResource;
-import pe.edu.upc.center.jameoFit.recipes.interfaces.rest.resources.RecipeResource;
+import pe.edu.upc.mealplan_service.mealplan.application.internal.outboundservices.acl.rest.resource.RecipeResource;
 
 import java.util.List;
 
@@ -21,7 +21,7 @@ public class MealPlanEntryDetailedResourceAssembler {
                     recipe.description(),
                     entry.getDay(),
                     entry.getMealPlanType().getId(),
-                    entry.getMealPlan().getId()
+                    entry.getMealPlan().getId().intValue()
             );
         }).toList();
     }
