@@ -2,7 +2,7 @@ package pe.edu.upc.profiles_service.profiles.application.internal.commandservice
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pe.edu.upc.profiles_service.profiles.application.internal.outboundservices.acl.ExternalUserService;
+import pe.edu.upc.profiles_service.profiles.application.internal.outboundservices.ExternalUserService;
 import pe.edu.upc.profiles_service.profiles.domain.model.aggregates.UserProfile;
 import pe.edu.upc.profiles_service.profiles.domain.model.commands.CreateUserProfileCommand;
 import pe.edu.upc.profiles_service.profiles.domain.model.commands.DeleteUserProfileCommand;
@@ -19,13 +19,13 @@ public class UserProfileCommandServiceImpl implements UserProfileCommandService 
     private final ActivityLevelRepository activityLevelRepository;
     private final ObjectiveRepository objectiveRepository;
     private final AllergyRepository allergyRepository;
-    private final ExternalUserService externalUserService; // ✅ nuevo
+    private final ExternalUserService externalUserService;
 
     public UserProfileCommandServiceImpl(UserProfileRepository userProfileRepository,
                                          ActivityLevelRepository activityLevelRepository,
                                          ObjectiveRepository objectiveRepository,
                                          AllergyRepository allergyRepository,
-                                         ExternalUserService externalUserService) { // ✅ inyección
+                                         ExternalUserService externalUserService) {
         this.userProfileRepository = userProfileRepository;
         this.activityLevelRepository = activityLevelRepository;
         this.objectiveRepository = objectiveRepository;
@@ -38,7 +38,6 @@ public class UserProfileCommandServiceImpl implements UserProfileCommandService 
     public int handle(CreateUserProfileCommand command) {
         if (command.userId() == null) throw new IllegalArgumentException("userId is required");
 
-        // Validación contra IAM vía ACL
         if (!externalUserService.userExists(command.userId()))
             throw new IllegalArgumentException("User with ID " + command.userId() + " does not exist in IAM");
 
@@ -59,7 +58,7 @@ public class UserProfileCommandServiceImpl implements UserProfileCommandService 
         }
 
         var savedProfile = userProfileRepository.save(userProfile);
-        return savedProfile.getId();
+        return savedProfile.getId().intValue();
     }
 
 

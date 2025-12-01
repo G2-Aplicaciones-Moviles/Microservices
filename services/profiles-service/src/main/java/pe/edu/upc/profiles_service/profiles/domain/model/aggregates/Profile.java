@@ -8,35 +8,30 @@ import pe.edu.upc.profiles_service.shared.domain.model.aggregates.AuditableAbstr
 
 @Entity
 @Table(name = "profiles")
+@Getter
 @NoArgsConstructor
 public class Profile extends AuditableAbstractAggregateRoot<Profile> {
 
-    @Getter
     @NotNull
     @Column(name = "name", length = 25, nullable = false)
     private String name;
 
-    @Getter
     @NotNull
     @Column(name = "email", length = 25, nullable = false)
     private String email;
 
-    @Getter
     @NotNull
     @Column(name = "password", length = 25, nullable = false)
     private String password;
 
-    @Getter
     @NotNull
     @Column(name = "isActive", nullable = false)
     private Boolean isActive;
 
-    @Getter
     @NotNull
     @Column(name = "birthDate", length = 25, nullable = false)
     private String birthDate;
 
-    @Getter
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "userProfile_id", nullable = false)
     private UserProfile userProfile;

@@ -1,5 +1,8 @@
 package pe.edu.upc.profiles_service.profiles.domain.model.events;
 
+import lombok.Getter;
+
+@Getter
 public class UserProfileCreatedEvent extends DomainEvent {
 
     private final Long userProfileId;
@@ -9,13 +12,5 @@ public class UserProfileCreatedEvent extends DomainEvent {
         super("profiles.userprofile.created");
         this.userProfileId = userProfileId.longValue();
         this.userId = userId;
-    }
-
-    public Long getUserProfileId() {
-        return userProfileId;
-    }
-
-    public Long getUserId() {
-        return userId;
     }
 }

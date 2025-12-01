@@ -42,7 +42,6 @@ public class ActivityLevel extends AuditableModel {
     }
 
     public double calculateCalories(double weight, double height, int age) {
-        // Ejemplo de cálculo usando fórmula de Harris-Benedict ajustada por factor de actividad
         double bmr = 10 * weight + 6.25 * height - 5 * age + 5; // Suponiendo hombre
         return bmr * this.activityFactor;
     }

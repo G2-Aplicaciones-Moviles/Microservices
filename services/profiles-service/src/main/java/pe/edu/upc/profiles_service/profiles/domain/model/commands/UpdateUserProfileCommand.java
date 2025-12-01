@@ -8,5 +8,6 @@ public record UpdateUserProfileCommand(
         int userScore,
         Long activityLevelId,
         Long objectiveId,
-        String birthDate // ✅ nuevo
-) { }
+        String birthDate
+) {
+}

@@ -22,53 +22,42 @@ import java.util.Objects;
  */
 @Entity
 @Table(name = "user_profiles")
+@Getter
 @NoArgsConstructor
 public class UserProfile extends AuditableAbstractAggregateRoot<UserProfile> {
 
-    // REFERENCIA AL USER EN IAM (uno a uno)
-    @Getter
     @NotNull
     @Column(name = "user_id", nullable = false, unique = true)
     private Long userId;
 
-    // ATRIBUTOS DEL PERFIL
-    @Getter
     @NotNull
     @Column(name = "gender", length = 25, nullable = false)
     private String gender;
 
-    @Getter
     @NotNull
     @Column(name = "height", nullable = false)
     private double height;
 
-    @Getter
     @NotNull
     @Column(name = "weight", nullable = false)
     private double weight;
 
-    @Getter
     @NotNull
     @Column(name = "user_score", nullable = false)
     private int userScore;
 
-    @Getter
     @NotNull
     @Column(name = "birth_date", length = 25, nullable = false)
     private String birthDate; // ✅ nuevo
 
-    // RELACIONES (ENTITIES)
-    @Getter
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "activity_level_id", nullable = false)
     private ActivityLevel activityLevel;
 
-    @Getter
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "objective_id", nullable = false)
     private Objective objective;
 
-    @Getter
     @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "user_profile_allergies",
@@ -87,7 +76,7 @@ public class UserProfile extends AuditableAbstractAggregateRoot<UserProfile> {
                        ActivityLevel activityLevel,
                        Objective objective,
                        int userScore,
-                       String birthDate) { // ✅ agregado
+                       String birthDate) {
         this.userId = Objects.requireNonNull(userId, "userId required");
         this.gender = Objects.requireNonNull(gender, "gender required");
         this.height = height;
@@ -95,7 +84,7 @@ public class UserProfile extends AuditableAbstractAggregateRoot<UserProfile> {
         this.activityLevel = Objects.requireNonNull(activityLevel, "activityLevel required");
         this.objective = Objects.requireNonNull(objective, "objective required");
         this.userScore = userScore;
-        this.birthDate = Objects.requireNonNull(birthDate, "birthDate required"); // ✅ asignado
+        this.birthDate = Objects.requireNonNull(birthDate, "birthDate required");
         this.allergies = new ArrayList<>();
     }
 
@@ -112,7 +101,7 @@ public class UserProfile extends AuditableAbstractAggregateRoot<UserProfile> {
         this.height = command.height();
         this.weight = command.weight();
         this.userScore = command.userScore();
-        this.birthDate = Objects.requireNonNull(command.birthDate(), "birthDate required"); // ✅ asignado
+        this.birthDate = Objects.requireNonNull(command.birthDate(), "birthDate required");
         this.activityLevel = Objects.requireNonNull(activityLevel, "activityLevel required");
         this.objective = Objects.requireNonNull(objective, "objective required");
         this.allergies = new ArrayList<>();
@@ -123,18 +112,17 @@ public class UserProfile extends AuditableAbstractAggregateRoot<UserProfile> {
      */
     public UserProfile updateProfile(String gender, double height, double weight,
                                      ActivityLevel activityLevel, Objective objective,
-                                     int userScore, String birthDate) { // ✅ agregado
+                                     int userScore, String birthDate) {
         this.gender = Objects.requireNonNull(gender, "gender required");
         this.height = height;
         this.weight = weight;
         this.activityLevel = Objects.requireNonNull(activityLevel, "activityLevel required");
         this.objective = Objects.requireNonNull(objective, "objective required");
         this.userScore = userScore;
-        this.birthDate = Objects.requireNonNull(birthDate, "birthDate required"); // ✅ asignado
+        this.birthDate = Objects.requireNonNull(birthDate, "birthDate required");
         return this;
     }
 
-    // Manipulación de alergias (comportamiento del aggregate)
     public void addAllergy(Allergy allergy) {
         if (allergy == null) return;
         if (!this.allergies.contains(allergy)) this.allergies.add(allergy);
@@ -145,13 +133,10 @@ public class UserProfile extends AuditableAbstractAggregateRoot<UserProfile> {
         this.allergies.remove(allergy);
     }
 
-    // Comportamiento de dominio: cálculo de calorías según activityLevel
     public double calculateCalorieNeeds(int age) {
-        // delega la fórmula a ActivityLevel (entity), manteniendo SRP
         return this.activityLevel.calculateCalories(this.weight, this.height, age);
     }
 
-    // Permite reemplazar el activity level o el objetivo de forma explícita (comportamiento del aggregate)
     public void updateActivityLevel(ActivityLevel newLevel) {
         this.activityLevel = Objects.requireNonNull(newLevel, "newLevel required");
     }
