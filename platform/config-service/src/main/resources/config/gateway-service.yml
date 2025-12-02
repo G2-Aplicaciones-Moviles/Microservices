@@ -1,0 +1,71 @@
+server:
+  port: 8080  # Puerto del API Gateway
+
+spring:
+  security:
+    oauth2:
+      resource-server:
+        jwt:
+          jwk-set-uri: "http://iam-service:8081/api/v1/jwks/.well-known/jwks.json"
+
+  cloud:
+    gateway:
+      global-cors:
+        add-to-simple-url-handler-mapping: true
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:3000"
+              - "http://localhost:5173"
+              - "https://app-cobox.web.app"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - "*"
+            exposedHeaders:
+              - "*"
+            allowCredentials: true
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: iam-service-route
+          uri: lb://iam-service
+          predicates:
+            - Path=/iam-service/**,/api/v1/authentication/**,/api/v1/roles/**,/api/v1/users/**,/api/v1/jwks/**
+
+        - id: mealplan-service-route
+          uri: lb://mealplan-service
+          predicates:
+            #            Aqui se pueden agregar mas paths (endpoints) del mealplan-service si es necesario
+            - Path=/mealplan-service/**,
+
+        - id: recipes-service-route
+          uri: lb://recipes-service
+          predicates:
+            #            Aqui se pueden agregar mas paths (endpoints) del recipes-service si es necesario
+            - Path=/recipes-service/**,/api/v1/client/**,/api/v1/orders/**
+          # Se repite el proceso con los demas microservicios
+
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      - name: iam-service
+        url: /iam-service/v3/api-docs
+      - name: mealplan-service
+        url: /mealplan-service/v3/api-docs
+      - name: recipes-service
+        url: /recipes-service/v3/api-docs
+
+management:
+  endpoints.web.exposure.include: "health,info"
+  endpoint.health.probes.enabled: true
