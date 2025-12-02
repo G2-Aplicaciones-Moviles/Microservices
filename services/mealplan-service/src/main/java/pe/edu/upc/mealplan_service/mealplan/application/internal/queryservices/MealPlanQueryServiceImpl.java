@@ -7,6 +7,7 @@ import pe.edu.upc.mealplan_service.mealplan.domain.model.queries.GetAllMealPlanB
 import pe.edu.upc.mealplan_service.mealplan.domain.model.queries.GetAllMealPlanQuery;
 import pe.edu.upc.mealplan_service.mealplan.domain.model.queries.GetEntriesWithRecipeInfo;
 import pe.edu.upc.mealplan_service.mealplan.domain.model.queries.GetMealPlanByIdQuery;
+import pe.edu.upc.mealplan_service.mealplan.domain.model.queries.GetOriginalTemplatesQuery;
 import pe.edu.upc.mealplan_service.mealplan.domain.services.MealPlanQueryService;
 import pe.edu.upc.mealplan_service.mealplan.infrastructure.persistence.jpa.repositories.MealPlanEntryRepository;
 import pe.edu.upc.mealplan_service.mealplan.infrastructure.persistence.jpa.repositories.MealPlanRepository;
@@ -39,9 +40,6 @@ public class MealPlanQueryServiceImpl implements MealPlanQueryService {
         return entries.stream().map(entry -> {
             var recipeOpt = externalRecipeService.fetchRecipeById(entry.getRecipeId().recipeId());
             var recipe = recipeOpt.orElse(null);
-            System.out.println("Entry ID: " + entry.getId());
-            System.out.println("MealPlanType: " + entry.getMealPlanType());
-            System.out.println("MealPlanType ID: " + (entry.getMealPlanType() != null ? entry.getMealPlanType().getId() : "null"));
 
             return new MealPlanEntryDetailedResource(
                     entry.getId(),
@@ -63,5 +61,11 @@ public class MealPlanQueryServiceImpl implements MealPlanQueryService {
     @Override
     public List<MealPlan> handle(GetAllMealPlanByProfileIdQuery query) {
         return this.mealPlanRepository.findAllByProfileId_UserProfileId(query.ProfileId());
+    }
+
+    @Override
+    public List<MealPlan> handle(GetOriginalTemplatesQuery query) {
+        return this.mealPlanRepository
+                .findAllByCreatedByNutritionistIdIsNotNullAndProfileId_UserProfileIdIsNull();
     }
 }

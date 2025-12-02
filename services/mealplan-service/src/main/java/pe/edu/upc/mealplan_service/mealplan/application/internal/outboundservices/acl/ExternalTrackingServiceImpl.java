@@ -64,4 +64,37 @@ public class ExternalTrackingServiceImpl implements ExternalTrackingService {
             return false;
         }
     }
+
+    /**
+     * Synchronizes a meal plan entry to the user's tracking.
+     * TODO: Implementar cuando el tracking-service tenga el endpoint correspondiente.
+     *
+     * @param profileId the user profile ID
+     * @param recipeId the recipe ID
+     * @param mealType the meal type (Breakfast, Lunch, Dinner, Snack)
+     * @param day the day number (1-7)
+     */
+    @Override
+    public void syncMealPlanEntryToTracking(Long profileId, int recipeId, String mealType, int day) {
+        if (profileId == null || profileId <= 0) {
+            System.err.println("Invalid profileId for tracking sync: " + profileId);
+            return;
+        }
+
+        try {
+            // TODO: Implementar llamada al Feign Client cuando esté disponible
+            // CreateMealPlanEntryRequest request = new CreateMealPlanEntryRequest(
+            //     recipeId, mealType, day
+            // );
+            // trackingClient.addMealPlanEntryToTracking(profileId, request);
+
+            System.out.println("Tracking sync stub: profileId=" + profileId +
+                    ", recipeId=" + recipeId + ", mealType=" + mealType + ", day=" + day);
+
+        } catch (FeignException.NotFound e) {
+            System.err.println("Tracking not found for user " + profileId);
+        } catch (Exception e) {
+            System.err.println("Error syncing meal plan entry to tracking: " + e.getMessage());
+        }
+    }
 }

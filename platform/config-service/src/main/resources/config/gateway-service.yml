@@ -40,18 +40,41 @@ spring:
           predicates:
             - Path=/iam-service/**,/api/v1/authentication/**,/api/v1/roles/**,/api/v1/users/**,/api/v1/jwks/**
 
+        - id: goals-service-route
+          uri: lb://goals-service
+          predicates:
+            - Path=/goals-service/**,/api/v1/goals/**
+
         - id: mealplan-service-route
           uri: lb://mealplan-service
           predicates:
-            #            Aqui se pueden agregar mas paths (endpoints) del mealplan-service si es necesario
-            - Path=/mealplan-service/**,
+            - Path=/mealplan-service/**,/api/v1/meal-plan/**
+
+        - id: nutrition-service-route
+          uri: lb://nutrition-service
+          predicates:
+            - Path=/nutrition-service/**,/api/v1/nutritionists/**,/api/v1/nutritionist-patients/**
+
+        - id: profile-service-route
+          uri: lb://profile-service
+          predicates:
+            - Path=/profile-service/**,/api/v1/user-profiles/**,/api/v1/profiles/**,/api/v1/objectives/**,/api/v1/allergies/**,/api/v1/activity-levels/**
 
         - id: recipes-service-route
           uri: lb://recipes-service
           predicates:
-            #            Aqui se pueden agregar mas paths (endpoints) del recipes-service si es necesario
-            - Path=/recipes-service/**,/api/v1/client/**,/api/v1/orders/**
-          # Se repite el proceso con los demas microservicios
+            - Path=/recipes-service/**,/api/v1/recipes/**,/api/v1/recipe-types/**,/api/v1/ingredients/**,/api/v1/favorite-recipes/**,/api/v1/categories/**
+
+        - id: recommendations-service-route
+          uri: lb://recommendations-service
+          predicates:
+            - Path=/recommendations-service/**,/api/v1/recommendations/**,/api/v1/recommendation-templates/**
+
+        - id: tracking-service-route
+          uri: lb://tracking-service
+          predicates:
+            - Path=/tracking-service/**,/api/v1/tracking-goals/**,/api/v1/tracking/**,/api/v1/meal-plan-entries/**,/api/v1/macronutrients/**
+
 
 springdoc:
   swagger-ui:
@@ -65,6 +88,16 @@ springdoc:
         url: /mealplan-service/v3/api-docs
       - name: recipes-service
         url: /recipes-service/v3/api-docs
+      - name: nutrition-service
+        url: /nutrition-service/v3/api-docs
+      - name: profile-service
+        url: /profile-service/v3/api-docs
+      - name: goals-service
+        url: /goals-service/v3/api-docs
+      - name: recommendations-service
+        url: /recommendations-service/v3/api-docs
+      - name: tracking-service
+        url: /tracking-service/v3/api-docs
 
 management:
   endpoints.web.exposure.include: "health,info"

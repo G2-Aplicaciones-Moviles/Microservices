@@ -28,7 +28,8 @@ public class MealPlanDetailedResourceAssembler {
                         mealPlan.getEntries().getMealPlanEntries(), fetchRecipe),
                 mealPlan.getTags().getMealPlanTags().stream()
                         .map(MealPlanTag::getTag)
-                        .toList()
+                        .toList(),
+                mealPlan.getCreatedByNutritionistId()
         );
     }
 }
