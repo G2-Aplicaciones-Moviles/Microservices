@@ -20,10 +20,6 @@ import java.util.Date;
         })
 public class NutritionistPatient extends AuditableAbstractAggregateRoot<NutritionistPatient> {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
-
     @NotNull
     @Column(name = "nutritionist_id", nullable = false)
     private Integer nutritionistId;

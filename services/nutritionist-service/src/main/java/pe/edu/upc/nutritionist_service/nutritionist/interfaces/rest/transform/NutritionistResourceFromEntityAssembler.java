@@ -6,7 +6,7 @@ import pe.edu.upc.nutritionist_service.nutritionist.interfaces.rest.resources.Nu
 public class NutritionistResourceFromEntityAssembler {
     public static NutritionistResource toResourceFromEntity(Nutritionist entity) {
         return new NutritionistResource(
-                entity.getId(),
+                entity.getId().intValue(),
                 entity.getUserId(),
                 entity.getFullName(),
                 entity.getLicenseNumber(),

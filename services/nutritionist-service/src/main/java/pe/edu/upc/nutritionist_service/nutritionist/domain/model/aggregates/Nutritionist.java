@@ -19,10 +19,6 @@ import java.util.Date;
         uniqueConstraints = { @UniqueConstraint(name = "uk_nutritionist_user", columnNames = "user_id") })
 public class Nutritionist extends AuditableAbstractAggregateRoot<Nutritionist> {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
-
     @NotNull
     @Column(name = "user_id", nullable = false, unique = true)
     private Long userId;

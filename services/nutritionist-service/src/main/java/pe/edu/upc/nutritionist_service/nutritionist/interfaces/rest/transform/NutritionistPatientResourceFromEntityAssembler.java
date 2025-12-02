@@ -7,7 +7,7 @@ public class NutritionistPatientResourceFromEntityAssembler {
 
     public static NutritionistPatientResource toResourceFromEntity(NutritionistPatient np) {
         return new NutritionistPatientResource(
-                np.getId(),
+                np.getId().intValue(),
                 np.getNutritionistId(),
                 np.getPatientUserId(),
                 np.getServiceType(),

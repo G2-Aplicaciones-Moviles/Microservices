@@ -33,7 +33,7 @@ build/
 .vscode/
 
 ### Environment Files ###
-.env
+docker/.env
 
 ### Seguridad: Ignorar llaves RSA ###
 *.key

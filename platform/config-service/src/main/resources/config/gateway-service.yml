@@ -14,10 +14,15 @@ spring:
         add-to-simple-url-handler-mapping: true
         corsConfigurations:
           '[/**]':
-            allowedOrigins:
-              - "http://localhost:3000"
-              - "http://localhost:5173"
-              - "https://app-cobox.web.app"
+            allowedOriginPatterns:
+              - "http://localhost:*"
+              - "http://127.0.0.1:*"
+              - "https://*.web.app"
+              - "https://*.firebaseapp.com"
+              - "capacitor://localhost"  # Capacitor apps
+              - "ionic://localhost"       # Ionic apps
+              - "http://localhost"        # Android emulador/desarrollo
+              - "https://*.firebaseapp.com" # Firebase App Distribution
             allowedMethods:
               - GET
               - POST
@@ -25,11 +30,23 @@ spring:
               - PATCH
               - DELETE
               - OPTIONS
+              - HEAD
             allowedHeaders:
               - "*"
+              - "Authorization"
+              - "Content-Type"
+              - "Accept"
+              - "Origin"
+              - "X-Requested-With"
+              - "Access-Control-Request-Method"
+              - "Access-Control-Request-Headers"
             exposedHeaders:
               - "*"
+              - "Authorization"
+              - "Content-Type"
+              - "X-Total-Count"
             allowCredentials: true
+            maxAge: 3600
       discovery:
         locator:
           enabled: true
@@ -50,15 +67,15 @@ spring:
           predicates:
             - Path=/mealplan-service/**,/api/v1/meal-plan/**
 
-        - id: nutrition-service-route
-          uri: lb://nutrition-service
+        - id: nutritionist-service-route
+          uri: lb://nutritionist-service
           predicates:
-            - Path=/nutrition-service/**,/api/v1/nutritionists/**,/api/v1/nutritionist-patients/**
+            - Path=/nutritionist-service/**,/api/v1/nutritionists/**,/api/v1/nutritionist-patients/**
 
-        - id: profile-service-route
-          uri: lb://profile-service
+        - id: profiles-service-route
+          uri: lb://profiles-service
           predicates:
-            - Path=/profile-service/**,/api/v1/user-profiles/**,/api/v1/profiles/**,/api/v1/objectives/**,/api/v1/allergies/**,/api/v1/activity-levels/**
+            - Path=/profiles-service/**,/api/v1/user-profiles/**,/api/v1/profiles/**,/api/v1/objectives/**,/api/v1/allergies/**,/api/v1/activity-levels/**
 
         - id: recipes-service-route
           uri: lb://recipes-service
@@ -84,16 +101,16 @@ springdoc:
     urls:
       - name: iam-service
         url: /iam-service/v3/api-docs
-      - name: mealplan-service
-        url: /mealplan-service/v3/api-docs
-      - name: recipes-service
-        url: /recipes-service/v3/api-docs
-      - name: nutrition-service
-        url: /nutrition-service/v3/api-docs
-      - name: profile-service
-        url: /profile-service/v3/api-docs
       - name: goals-service
         url: /goals-service/v3/api-docs
+      - name: mealplan-service
+        url: /mealplan-service/v3/api-docs
+      - name: nutritionist-service
+        url: /nutritionist-service/v3/api-docs
+      - name: profiles-service
+        url: /profiles-service/v3/api-docs
+      - name: recipes-service
+        url: /recipes-service/v3/api-docs
       - name: recommendations-service
         url: /recommendations-service/v3/api-docs
       - name: tracking-service

@@ -1,7 +1,7 @@
 package pe.edu.upc.recipes_service.recipes.interfaces.rest.transform;
 
-import pe.edu.upc.center.jameoFit.recipes.domain.model.commands.CreateCategoryCommand;
-import pe.edu.upc.center.jameoFit.recipes.interfaces.rest.resources.CreateCategoryResource;
+import pe.edu.upc.recipes_service.recipes.domain.model.commands.CreateCategoryCommand;
+import pe.edu.upc.recipes_service.recipes.interfaces.rest.resources.CreateCategoryResource;
 
 public class CreateCategoryCommandFromResourceAssembler {
 

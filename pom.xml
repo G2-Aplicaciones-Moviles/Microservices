@@ -43,14 +43,13 @@
         <module>platform/eureka-service</module>
         <module>platform/gateway-service</module>
         <module>services/chat-service</module>
-        <module>services/goals-service</module>
         <module>services/iam-service</module>
+        <module>services/goals-service</module>
         <module>services/mealplan-service</module>
         <module>services/nutritionist-service</module>
         <module>services/profiles-service</module>
         <module>services/recipes-service</module>
         <module>services/recommendations-service</module>
-        <module>services/subscriptions-service</module>
         <module>services/tracking-service</module>
     </modules>
 
