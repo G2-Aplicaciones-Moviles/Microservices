@@ -35,7 +35,7 @@ public class Tracking extends AuditableAbstractAggregateRoot<Tracking> {
 
     /**
      * -- SETTER --
-     *  Setter directo para consumed macros (útil desde services que calculan y persisten un nuevo MacronutrientValues).
+     * Setter directo para consumed macros (útil desde services que calculan y persisten un nuevo MacronutrientValues).
      */
     @Setter
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)

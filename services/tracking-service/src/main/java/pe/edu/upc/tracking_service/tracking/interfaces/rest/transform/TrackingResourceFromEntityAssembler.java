@@ -12,7 +12,7 @@ public class TrackingResourceFromEntityAssembler {
                 .toList();
 
         return new TrackingResource(
-                entity.getId(),
+                entity.getId().intValue(),
                 entity.getUserId().userId(),
                 entity.getDate(),
                 consumedMacros,

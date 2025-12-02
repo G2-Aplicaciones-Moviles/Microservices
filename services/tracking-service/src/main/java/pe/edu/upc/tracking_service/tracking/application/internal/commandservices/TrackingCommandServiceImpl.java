@@ -4,9 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import pe.edu.upc.tracking_service.recipes.interfaces.rest.resources.RecipeNutritionResource;
 import pe.edu.upc.tracking_service.tracking.application.internal.outboundservices.acl.ExternalRecipeService;
 import pe.edu.upc.tracking_service.tracking.application.internal.outboundservices.acl.ExternalUserProfileService;
+import pe.edu.upc.tracking_service.tracking.application.internal.outboundservices.acl.rest.resource.RecipeNutritionResource;
 import pe.edu.upc.tracking_service.tracking.domain.model.Entities.MacronutrientValues;
 import pe.edu.upc.tracking_service.tracking.domain.model.Entities.MealPlanType;
 import pe.edu.upc.tracking_service.tracking.domain.model.Entities.TrackingGoal;
@@ -54,16 +54,13 @@ public class TrackingCommandServiceImpl implements TrackingCommandService {
      * persiste un nuevo MacronutrientValues, lo asocia al tracking y guarda.
      */
     private void recalculateAndPersistConsumedMacros(Tracking tracking) {
-        // convertir id del tracking a long de forma segura (soporta getId() que devuelva int o Integer)
         long trackingIdLong;
         try {
-            trackingIdLong = ((Number) tracking.getId()).longValue();
+            trackingIdLong = tracking.getId();
         } catch (Exception ex) {
-            // fallback si por alguna razón no es Number (improbable)
             trackingIdLong = Long.parseLong(String.valueOf(tracking.getId()));
         }
 
-        // Usar método con property path "tracking.id"
         List<TrackingMealPlanEntry> entries = trackingMealPlanEntryRepository.findAllByTracking_Id(trackingIdLong);
 
         log.info("Recalculate macros for trackingId={} - found {} entries", trackingIdLong, entries.size());
@@ -109,12 +106,11 @@ public class TrackingCommandServiceImpl implements TrackingCommandService {
     }
 
     @Override
-    public int handle(CreateMealPlanEntryToTrackingCommand command) {
+    public Long handle(CreateMealPlanEntryToTrackingCommand command) {
         if (!externalRecipeService.existsByRecipeId(command.recipeId())) {
             throw new IllegalArgumentException("Recipe not found in Recipe bounded context with id: " + command.recipeId());
         }
 
-        // Buscar el tracking por ID (el command trae TrackingId)
         Optional<Tracking> trackingOpt = trackingRepository.findById(command.TrackingId());
         if (trackingOpt.isEmpty()) {
             throw new IllegalArgumentException("Tracking not found for id: " + command.TrackingId());
@@ -125,7 +121,6 @@ public class TrackingCommandServiceImpl implements TrackingCommandService {
 
         Tracking tracking = trackingOpt.get();
 
-        // Crear nuevo MealPlanEntry y asociarlo
         TrackingMealPlanEntry newEntry = new TrackingMealPlanEntry(
                 command.recipeId(),
                 mealPlanType,
@@ -133,14 +128,11 @@ public class TrackingCommandServiceImpl implements TrackingCommandService {
         );
         newEntry.setTracking(tracking);
 
-        // Persistir la entrada (la FK tracking_id está en TrackingMealPlanEntry)
         var saved = trackingMealPlanEntryRepository.save(newEntry);
         log.info("Saved TrackingMealPlanEntry id={} trackingId={} recipeId={}", saved.getId(), tracking.getId(), saved.getRecipeId().recipeId());
 
-        // Recalcular macros consumidos y persistir en tracking
         recalculateAndPersistConsumedMacros(tracking);
 
-        // Retornar id del tracking (owner)
         return tracking.getId();
     }
 
@@ -174,20 +166,18 @@ public class TrackingCommandServiceImpl implements TrackingCommandService {
 
     @Override
     public Optional<Tracking> handle(UpdateMealPlanEntryInTrackingCommand command) {
-        // Verificar existencia de la receta en Recipes bounded context
         if (!externalRecipeService.existsByRecipeId(command.recipeId())) {
             throw new IllegalArgumentException("Recipe not found in Recipe bounded context with id: " + command.recipeId());
         }
 
         Long trackingId = command.TrackingId();
-        // Si no viene trackingId, obtenerlo desde el mealPlanEntry existente
-        if (trackingId == null || trackingId == 0L) {
+        if (trackingId == 0L) {
             Optional<TrackingMealPlanEntry> mealPlanEntryOpt = trackingMealPlanEntryRepository.findById(command.MealPlanEntryId());
             if (mealPlanEntryOpt.isEmpty()) {
                 throw new IllegalArgumentException("MealPlan not found with id: " + command.MealPlanEntryId());
             }
             TrackingMealPlanEntry existingEntry = mealPlanEntryOpt.get();
-            trackingId = ((Number) existingEntry.getTracking().getId()).longValue();
+            trackingId = existingEntry.getTracking().getId();
         }
 
         Optional<Tracking> trackingOpt = trackingRepository.findById(trackingId);
@@ -225,8 +215,7 @@ public class TrackingCommandServiceImpl implements TrackingCommandService {
     }
 
     @Override
-    public int handle(CreateTrackingCommand command) {
-        // Verificar existencia del perfil
+    public Long handle(CreateTrackingCommand command) {
         if (!externalUserProfileService.existsByUserId(command.profile())) {
             throw new IllegalArgumentException("User does not exist in Profile bounded context: " + command.profile().userId());
         }

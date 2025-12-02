@@ -9,6 +9,5 @@ import java.util.List;
 @Repository
 public interface TrackingMealPlanEntryRepository extends JpaRepository<TrackingMealPlanEntry, Long> {
 
-    // CORREGIDO: usar el patron correcto para buscar por el id del objeto asociado 'tracking'
     List<TrackingMealPlanEntry> findAllByTracking_Id(Long trackingId);
 }

@@ -10,5 +10,6 @@ import java.util.Optional;
 @Repository
 public interface TrackingMealPlanTypeRepository extends JpaRepository<MealPlanType, Long> {
     boolean existsByName(MealPlanTypes mealPlanType);
+
     Optional<MealPlanType> findByName(MealPlanTypes name);
 }

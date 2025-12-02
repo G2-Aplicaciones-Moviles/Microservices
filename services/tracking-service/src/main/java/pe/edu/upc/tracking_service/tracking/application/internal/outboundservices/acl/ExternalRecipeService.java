@@ -1,65 +1,57 @@
 package pe.edu.upc.tracking_service.tracking.application.internal.outboundservices.acl;
 
+import feign.FeignException;
 import org.springframework.stereotype.Service;
-import pe.edu.upc.tracking_service.recipes.interfaces.rest.acl.RecipeContextFacade;
-import pe.edu.upc.tracking_service.recipes.interfaces.rest.resources.RecipeNutritionResource;
-import pe.edu.upc.tracking_service.recipes.interfaces.rest.resources.RecipeResource;
+import pe.edu.upc.tracking_service.tracking.application.internal.outboundservices.acl.rest.RecipesIntegrationClient;
+import pe.edu.upc.tracking_service.tracking.application.internal.outboundservices.acl.rest.resource.RecipeNutritionResource;
 import pe.edu.upc.tracking_service.tracking.domain.model.valueobjects.RecipeId;
 
-import java.util.List;
 import java.util.Optional;
 
+/**
+ * Service to communicate with recipes-service via Feign Client.
+ */
 @Service
 public class ExternalRecipeService {
 
-    private final RecipeContextFacade recipeContextFacade;
+    private final RecipesIntegrationClient recipesClient;
 
-    public ExternalRecipeService(RecipeContextFacade recipeContextFacade) {
-        this.recipeContextFacade = recipeContextFacade;
+    public ExternalRecipeService(RecipesIntegrationClient recipesClient) {
+        this.recipesClient = recipesClient;
     }
 
     /**
-     * Verifica si existe una receta con el ID especificado
-     * @param recipeId ID de la receta a verificar (value object)
-     * @return true si la receta existe, false en caso contrario
+     * Checks if a recipe exists by ID.
+     *
+     * @param recipeId the recipe ID value object
+     * @return true if the recipe exists, false otherwise
      */
     public boolean existsByRecipeId(RecipeId recipeId) {
-        Optional<RecipeResource> recipe = recipeContextFacade.fetchById(Math.toIntExact(recipeId.recipeId()));
-        return recipe.isPresent();
+        try {
+            recipesClient.getRecipeById(Math.toIntExact(recipeId.recipeId()));
+            return true;
+        } catch (FeignException.NotFound e) {
+            return false;
+        } catch (Exception e) {
+            System.err.println("Error checking recipe existence by ID: " + e.getMessage());
+            return false;
+        }
     }
 
     /**
-     * Obtiene una receta por su ID
-     * @param recipeId ID de la receta (value object)
-     * @return Optional con la receta si existe
+     * Retrieves nutrition information for a recipe.
+     *
+     * @param recipeId the recipe ID value object
+     * @return an Optional containing the nutrition resource if found, empty otherwise
      */
-    public Optional<RecipeResource> getRecipeById(RecipeId recipeId) {
-        return recipeContextFacade.fetchById(Math.toIntExact(recipeId.recipeId()));
-    }
-
-    /**
-     * Verifica si existe una receta con el nombre especificado
-     * @param name Nombre de la receta
-     * @return true si la receta existe, false en caso contrario
-     */
-    public boolean existsByName(String name) {
-        return recipeContextFacade.existsByName(name);
-    }
-
-    /**
-     * Obtiene todas las recetas disponibles
-     * @return Lista de todas las recetas
-     */
-    public List<RecipeResource> getAllRecipes() {
-        return recipeContextFacade.fetchAll();
-    }
-
     public Optional<RecipeNutritionResource> fetchNutritionByRecipeId(RecipeId recipeId) {
         try {
-            // RecipeContextFacade devuelve Optional<RecipeResource> y tiene método fetchNutritionByRecipeId
-            // pero aquí usamos el facade que expone fetchNutritionByRecipeId(int)
-            return Optional.ofNullable(recipeContextFacade.fetchNutritionByRecipeId(Math.toIntExact(recipeId.recipeId())));
-        } catch (IllegalArgumentException e) {
+            RecipeNutritionResource nutrition = recipesClient.getRecipeNutrition(Math.toIntExact(recipeId.recipeId()));
+            return Optional.of(nutrition);
+        } catch (FeignException.NotFound e) {
+            return Optional.empty();
+        } catch (Exception e) {
+            System.err.println("Error fetching nutrition for recipe ID: " + e.getMessage());
             return Optional.empty();
         }
     }

@@ -1,6 +1,5 @@
 package pe.edu.upc.tracking_service.tracking.infrastructure.persistence.jpa.repositories;
 
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import pe.edu.upc.tracking_service.tracking.domain.model.Entities.MacronutrientValues;
 

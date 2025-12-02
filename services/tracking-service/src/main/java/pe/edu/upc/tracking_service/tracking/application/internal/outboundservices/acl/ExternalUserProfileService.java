@@ -1,56 +1,99 @@
 package pe.edu.upc.tracking_service.tracking.application.internal.outboundservices.acl;
 
+import feign.FeignException;
 import org.springframework.stereotype.Service;
-import pe.edu.upc.tracking_service.profiles.domain.model.aggregates.UserProfile;
-import pe.edu.upc.tracking_service.profiles.interfaces.acl.ProfileContextFacade;
-import pe.edu.upc.tracking_service.profiles.interfaces.acl.UserProfilesContextFacade;
+import pe.edu.upc.tracking_service.tracking.application.internal.outboundservices.acl.rest.ProfilesIntegrationClient;
+import pe.edu.upc.tracking_service.tracking.application.internal.outboundservices.acl.rest.resource.UserProfileResource;
 import pe.edu.upc.tracking_service.tracking.domain.model.dto.UserProfileDto;
 import pe.edu.upc.tracking_service.tracking.domain.model.valueobjects.UserId;
 
-import java.util.Objects;
+import java.util.List;
 import java.util.Optional;
 
 /**
- * ACL entre Tracking y Profiles (mapea UserProfile -> UserProfileDto).
+ * Service to communicate with profiles-service via Feign Client.
  */
 @Service
 public class ExternalUserProfileService {
 
-    private final UserProfilesContextFacade userProfilesFacade;
-    private final ProfileContextFacade profileContextFacade;
+    private final ProfilesIntegrationClient profilesClient;
 
-    public ExternalUserProfileService(UserProfilesContextFacade userProfilesFacade,
-                                      ProfileContextFacade profileContextFacade) {
-        this.userProfilesFacade = userProfilesFacade;
-        this.profileContextFacade = profileContextFacade;
+    public ExternalUserProfileService(ProfilesIntegrationClient profilesClient) {
+        this.profilesClient = profilesClient;
     }
 
     /**
-     * Verifica si existe un perfil asociado a un UserId.
+     * Checks if a user profile exists by userId.
+     *
+     * @param userId the user ID value object
+     * @return true if the user profile exists, false otherwise
      */
     public boolean existsByUserId(UserId userId) {
-        if (userId == null || userId.userId() == null) return false;
+        if (userId == null || userId.userId() == null) {
+            return false;
+        }
 
-        return userProfilesFacade.fetchAll().stream()
-                .anyMatch(profileResource -> Objects.equals(Long.valueOf(profileResource.id()), userId.userId()));
+        try {
+            List<UserProfileResource> profiles = profilesClient.getAllUserProfiles();
+            return profiles.stream()
+                    .anyMatch(profile -> userId.userId().equals((long) profile.id()));
+        } catch (Exception e) {
+            System.err.println("Error checking user profile existence by userId: " + e.getMessage());
+            return false;
+        }
     }
 
     /**
-     * Obtiene el nombre del objetivo (goal) de un perfil de usuario.
+     * Retrieves a user profile by ID.
+     *
+     * @param profileId the profile ID
+     * @return an Optional containing the user profile if found, empty otherwise
      */
-    public Optional<String> getObjectiveNameByProfileId(Long profileId) {
-        return userProfilesFacade.fetchObjectiveNameByProfileId(profileId);
+    public Optional<UserProfileResource> getUserProfileById(Long profileId) {
+        try {
+            UserProfileResource profile = profilesClient.getUserProfileById(profileId.intValue());
+            return Optional.of(profile);
+        } catch (FeignException.NotFound e) {
+            return Optional.empty();
+        } catch (Exception e) {
+            System.err.println("Error fetching user profile by ID: " + e.getMessage());
+            return Optional.empty();
+        }
     }
 
     /**
-     * Verifica si un perfil existe.
+     * Retrieves a user profile DTO by ID for tracking calculations.
+     *
+     * @param profileId the profile ID
+     * @return an Optional containing the user profile DTO if found, empty otherwise
+     */
+    public Optional<UserProfileDto> getUserProfileDtoById(Long profileId) {
+        return getUserProfileById(profileId).map(this::mapToDto);
+    }
+
+    /**
+     * Checks if a profile exists by ID.
+     *
+     * @param profileId the profile ID
+     * @return true if the profile exists, false otherwise
      */
     public boolean existsProfile(Long profileId) {
-        return userProfilesFacade.existsProfileById(profileId);
+        try {
+            profilesClient.getUserProfileById(profileId.intValue());
+            return true;
+        } catch (FeignException.NotFound e) {
+            return false;
+        } catch (Exception e) {
+            System.err.println("Error checking profile existence by ID: " + e.getMessage());
+            return false;
+        }
     }
 
     /**
-     * Lanza excepción si el perfil no existe.
+     * Validates that a profile exists, throws exception if not found.
+     *
+     * @param profileId the profile ID to validate
+     * @throws IllegalArgumentException if the profile does not exist
      */
     public void validateProfileExists(Long profileId) {
         if (!existsProfile(profileId)) {
@@ -59,82 +102,42 @@ public class ExternalUserProfileService {
     }
 
     /**
-     * Obtiene el nombre del objetivo validando existencia.
+     * Maps UserProfileResource to UserProfileDto for tracking calculations.
+     *
+     * @param resource the user profile resource
+     * @return the user profile DTO
      */
-    public String getValidatedObjectiveName(Long profileId) {
-        validateProfileExists(profileId);
+    private UserProfileDto mapToDto(UserProfileResource resource) {
+        double activityFactor = calculateActivityFactor(resource.activityLevelName());
 
-        return getObjectiveNameByProfileId(profileId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Profile exists but has no objective defined for ID: " + profileId));
+        return new UserProfileDto(
+                (long) resource.id(),
+                resource.gender(),
+                resource.height() != null ? resource.height() : 0.0,
+                resource.weight() != null ? resource.weight() : 0.0,
+                activityFactor,
+                resource.objectiveName(),
+                resource.birthDate()
+        );
     }
 
     /**
-     * Devuelve un UserProfileDto construido desde el aggregate UserProfile.
+     * Calculates activity factor from activity level string.
      *
-     * UserProfileDto(
-     *   Long userProfileId,
-     *   String gender,
-     *   double heightMeters,
-     *   double weightKg,
-     *   double activityFactor,
-     *   String objectiveName,
-     *   String birthDate
-     * )
+     * @param activityLevel the activity level string
+     * @return the activity factor
      */
-    public Optional<UserProfileDto> fetchUserProfileDtoById(Long profileId) {
-        if (profileId == null) return Optional.empty();
+    private double calculateActivityFactor(String activityLevel) {
+        if (activityLevel == null) {
+            return 1.2;
+        }
 
-        return userProfilesFacade.fetchUserProfileById(profileId)
-                .map(this::mapToDto);
-    }
-
-    private UserProfileDto mapToDto(UserProfile entity) {
-        if (entity == null) return null;
-
-        // userProfileId: adaptar posible tipo de getId() (int/Integer/Long)
-        Long userProfileId = null;
-        try {
-            Object rawId = entity.getId();
-            if (rawId instanceof Long) userProfileId = (Long) rawId;
-            else if (rawId instanceof Integer) userProfileId = Long.valueOf((Integer) rawId);
-            else if (rawId != null) userProfileId = Long.valueOf(rawId.toString());
-        } catch (Exception ignored) { }
-
-        String gender = null;
-        try { gender = entity.getGender(); } catch (Exception ignored) { }
-
-        double heightMeters = 0.0;
-        try { heightMeters = entity.getHeight(); } catch (Exception ignored) { }
-
-        double weightKg = 0.0;
-        try { weightKg = entity.getWeight(); } catch (Exception ignored) { }
-
-        double activityFactor = 1.0;
-        try {
-            if (entity.getActivityLevel() != null) {
-                activityFactor = entity.getActivityLevel().getActivityFactor();
-            }
-        } catch (Exception ignored) { }
-
-        String objectiveName = null;
-        try {
-            if (entity.getObjective() != null) {
-                objectiveName = entity.getObjective().getObjectiveName();
-            }
-        } catch (Exception ignored) { }
-
-        String birthDate = null;
-        try { birthDate = entity.getBirthDate(); } catch (Exception ignored) { }
-
-        return new UserProfileDto(
-                userProfileId,
-                gender,
-                heightMeters,
-                weightKg,
-                activityFactor,
-                objectiveName,
-                birthDate
-        );
+        return switch (activityLevel.toUpperCase()) {
+            case "LIGHT", "LIGERO" -> 1.375;
+            case "MODERATE", "MODERADO" -> 1.55;
+            case "ACTIVE", "ACTIVO" -> 1.725;
+            case "VERY_ACTIVE", "MUY_ACTIVO" -> 1.9;
+            default -> 1.2;
+        };
     }
 }

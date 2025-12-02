@@ -1,7 +1,7 @@
 package pe.edu.upc.tracking_service.tracking.domain.services;
 
-import pe.edu.upc.center.jameoFit.tracking.domain.model.Entities.MacronutrientValues;
-import pe.edu.upc.center.jameoFit.tracking.domain.model.dto.UserProfileDto;
+import pe.edu.upc.tracking_service.tracking.domain.model.Entities.MacronutrientValues;
+import pe.edu.upc.tracking_service.tracking.domain.model.dto.UserProfileDto;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -17,7 +17,8 @@ import java.time.Period;
  */
 public final class CalorieCalculatorService {
 
-    private CalorieCalculatorService() {}
+    private CalorieCalculatorService() {
+    }
 
     public static int calculateAgeFromBirthDate(String birthDateIso) {
         if (birthDateIso == null || birthDateIso.isBlank()) {

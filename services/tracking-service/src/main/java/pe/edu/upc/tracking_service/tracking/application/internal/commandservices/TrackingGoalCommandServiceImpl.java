@@ -78,22 +78,19 @@ public class TrackingGoalCommandServiceImpl implements TrackingGoalCommandServic
 
     /**
      * Crea un tracking goal automáticamente basado en el objetivo del perfil
+     *
      * @param profileId ID del perfil
      * @return ID del tracking goal creado
      */
     public Long createTrackingGoalFromProfile(Long profileId) {
-        // Obtener DTO del perfil y validar
-        Optional<UserProfileDto> profileDtoOpt = externalUserProfileService.fetchUserProfileDtoById(profileId);
+        Optional<UserProfileDto> profileDtoOpt = externalUserProfileService.getUserProfileDtoById(profileId);
         UserProfileDto profileDto = profileDtoOpt.orElseThrow(() ->
                 new IllegalArgumentException("UserProfile not found for id: " + profileId));
 
-        // Calcular macros objetivo
         MacronutrientValues macros = CalorieCalculatorService.calculateTargetMacronutrients(profileDto);
 
-        // Guardar macronutrientes
         macronutrientValuesRepository.save(macros);
 
-        // Crear el comando y ejecutarlo
         var command = new CreateTrackingGoalCommand(
                 new UserId(profileId),
                 macros
@@ -104,35 +101,31 @@ public class TrackingGoalCommandServiceImpl implements TrackingGoalCommandServic
 
     /**
      * Actualiza un tracking goal basado en el objetivo actual del perfil
+     *
      * @param profileId ID del perfil
      */
     public void updateTrackingGoalFromProfile(Long profileId) {
-        // Obtener DTO
-        Optional<UserProfileDto> profileDtoOpt = externalUserProfileService.fetchUserProfileDtoById(profileId);
+        Optional<UserProfileDto> profileDtoOpt = externalUserProfileService.getUserProfileDtoById(profileId);
         UserProfileDto profileDto = profileDtoOpt.orElseThrow(() ->
                 new IllegalArgumentException("UserProfile not found for id: " + profileId));
 
-        // Calcular macros
         MacronutrientValues macros = CalorieCalculatorService.calculateTargetMacronutrients(profileDto);
 
-        // Guardar macros nuevos
         macronutrientValuesRepository.save(macros);
 
-        // Buscar tracking goal existente
         Optional<TrackingGoal> trackingGoalOpt = trackingGoalRepository.findByUserId(new UserId(profileId));
         if (trackingGoalOpt.isEmpty()) {
             throw new IllegalArgumentException("Tracking goal not found for user: " + profileId);
         }
         TrackingGoal trackingGoal = trackingGoalOpt.get();
 
-        // Actualizar el target macros del tracking goal (usa el método del entity)
         try {
-            trackingGoal.updateTargetMacros(macros); // si tu entity usa este método
+            trackingGoal.updateTargetMacros(macros);
         } catch (NoSuchMethodError e) {
-            // fallback: si tu entity expone setTargetMacros, usa eso en su lugar
             try {
                 trackingGoal.setTargetMacros(macros);
-            } catch (Exception ignored) { }
+            } catch (Exception ignored) {
+            }
         }
 
         trackingGoalRepository.save(trackingGoal);
@@ -140,6 +133,7 @@ public class TrackingGoalCommandServiceImpl implements TrackingGoalCommandServic
 
     /**
      * Verifica si un tracking goal existe para un perfil
+     *
      * @param profileId ID del perfil
      * @return true si existe, false en caso contrario
      */
