@@ -23,7 +23,8 @@ public class MealPlanResourceFromEntityAssembler {
                 mealPlan.getTags().getMealPlanTags()
                         .stream()
                         .map(MealPlanTag::getTag)
-                        .toList()
+                        .toList(),
+                mealPlan.getCreatedByNutritionistId()
         );
     }
 }

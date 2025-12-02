@@ -14,6 +14,7 @@ public record MealPlanDetailedResource(
         String category,
         boolean isCurrent,
         List<MealPlanEntryDetailedResource> entries,
-        List<String> tags
+        List<String> tags,
+        Integer createdByNutritionistId
 ) {
 }

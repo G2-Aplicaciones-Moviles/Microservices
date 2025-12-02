@@ -11,3 +11,4 @@ public interface MealPlanTypeQueryService {
     List<MealPlanType> handle(GetAllMealPlanTypesQuery query);
     Optional<MealPlanType> handle(GetMealPlanTypeByNameQuery query);
 }
+

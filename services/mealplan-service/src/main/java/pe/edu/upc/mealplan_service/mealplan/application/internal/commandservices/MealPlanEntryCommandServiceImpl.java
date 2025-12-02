@@ -41,95 +41,135 @@ public class MealPlanEntryCommandServiceImpl implements MealPlanEntryCommandServ
         this.externalTrackingService = externalTrackingService;
     }
 
-    /**
-     * Handles the creation of a new meal plan entry.
-     *
-     * @param command the command containing entry details
-     * @return the ID of the created entry
-     * @throws IllegalArgumentException if validation fails
-     */
     @Override
     @Transactional
     public int handle(CreateMealPlanEntryCommand command) {
-        logger.info("Creating meal plan entry: mealPlanId={}, recipeId={}, type={}, day={}",
+        logger.info("Handling CreateMealPlanEntryCommand: mealPlanId={}, recipeId={}, type={}, day={}",
                 command.mealPlanId(), command.recipeId(), command.type(), command.day());
 
+        // ============================================
+        // 1) CARGAR Y VALIDAR MEAL PLAN
+        // ============================================
         var plan = mealPlanRepository.findById(command.mealPlanId())
                 .orElseThrow(() -> {
-                    logger.error("MealPlan not found: {}", command.mealPlanId());
+                    logger.error("MealPlan not found for id {}", command.mealPlanId());
                     return new IllegalArgumentException("MealPlan not found");
                 });
 
+        // ============================================
+        // 2) VALIDAR TIPO DE COMIDA Y DÍA
+        // ============================================
         var mealTypeEnum = MealPlanTypes.valueOf(command.type());
         if (command.day() < 1 || command.day() > 7) {
-            logger.error("Invalid day: {}", command.day());
-            throw new IllegalArgumentException("Day must be between 1 and 7");
+            logger.error("Invalid day: {} (must be 1..7)", command.day());
+            throw new IllegalArgumentException("day must be between 1 and 7");
         }
 
         var mealType = mealPlanTypeRepository.findByType(mealTypeEnum)
                 .orElseThrow(() -> {
-                    logger.error("MealPlanType not found: {}", command.type());
+                    logger.error("MealPlanType not seeded: {}", command.type());
                     return new IllegalArgumentException("MealPlanType not seeded: " + command.type());
                 });
 
+        // ============================================
+        // 3) VALIDAR RECIPE Y OBTENER MACROS (USANDO FEIGN)
+        // ============================================
         var optRecipe = externalRecipeService.fetchRecipeById(command.recipeId());
         if (optRecipe.isEmpty()) {
-            logger.error("Recipe not found: {}", command.recipeId());
+            logger.error("Recipe not found in Recipe BC for id {}", command.recipeId());
             throw new IllegalArgumentException("Recipe not found");
         }
 
         var nutrition = externalRecipeService.fetchNutrition(command.recipeId());
-        logger.debug("Recipe nutrition: calories={}, carbs={}, proteins={}, fats={}",
-                nutrition.calories(), nutrition.carbs(), nutrition.proteins(), nutrition.fats());
+        logger.info("Fetched nutrition for recipe {} -> calories={}, carbs={}, proteins={}, fats={}",
+                command.recipeId(),
+                nutrition.calories(), nutrition.carbs(), nutrition.proteins(), nutrition.fats()
+        );
 
+        // ============================================
+        // 4) CREAR Y PERSISTIR MEAL PLAN ENTRY
+        // ============================================
         var entry = new MealPlanEntry(new RecipeId(command.recipeId()), mealType, command.day(), plan);
         var savedEntry = mealPlanEntryRepository.save(entry);
-        logger.info("Saved MealPlanEntry with id: {}", savedEntry.getId());
+        logger.info("Saved MealPlanEntry with id {}", savedEntry.getId());
 
+        // ============================================
+        // 5) ACTUALIZAR MACROS DEL MEAL PLAN
+        // ============================================
         plan.addEntry(savedEntry);
-        plan.addNutrition(nutrition.calories(), nutrition.carbs(),
-                nutrition.proteins(), nutrition.fats());
+        plan.addNutrition(nutrition.calories(), nutrition.carbs(), nutrition.proteins(), nutrition.fats());
         mealPlanRepository.save(plan);
+        logger.info("MealPlan {} saved with updated macros", plan.getId());
 
-        logger.info("Updated MealPlan {} with new entry", plan.getId());
-
-        validateTrackingSync(plan, savedEntry);
+        // ============================================
+        // 6) SINCRONIZAR CON TRACKING (SI APLICA) - USANDO FEIGN
+        // ============================================
+        syncWithTracking(plan, savedEntry, mealTypeEnum, command);
 
         return savedEntry.getId();
     }
 
     /**
-     * Validates if tracking sync is possible for the user.
-     * Logs information about tracking availability without breaking the flow.
+     * Sincroniza la entrada del meal plan con el tracking del usuario.
+     * Solo se ejecuta si el meal plan está asignado a un usuario (no es template).
+     * ADAPTADO PARA USAR FEIGN EN LUGAR DE ACL
      */
-    private void validateTrackingSync(
+    private void syncWithTracking(
             pe.edu.upc.mealplan_service.mealplan.domain.model.aggregates.MealPlan plan,
-            MealPlanEntry entry) {
+            MealPlanEntry savedEntry,
+            MealPlanTypes mealTypeEnum,
+            CreateMealPlanEntryCommand command
+    ) {
         try {
-            Long userId = extractProfileId(plan.getProfileId());
-
-            if (externalTrackingService.trackingExistsForUser(userId)) {
-                logger.info("Tracking exists for user {}. Entry {} can be synced if needed.",
-                        userId, entry.getId());
-            } else {
-                logger.info("No tracking found for user {}. Entry {} saved without tracking sync.",
-                        userId, entry.getId());
+            // Validar que el meal plan tenga un profileId (no es template)
+            if (plan.getProfileId() == null) {
+                logger.info("MealPlan {} has no profileId (it's a template), skipping tracking sync", plan.getId());
+                return;
             }
-        } catch (Exception e) {
-            logger.warn("Could not validate tracking sync: {}", e.getMessage());
+
+            // Extraer profileId
+            Long profileId = extractProfileId(plan.getProfileId());
+            if (profileId == null || profileId == 0) {
+                logger.warn("Could not extract valid profileId from MealPlan {}, skipping tracking sync", plan.getId());
+                return;
+            }
+
+            logger.info("Extracted profileId={} from MealPlan {}", profileId, plan.getId());
+
+            // Sincronizar con tracking usando Feign
+            externalTrackingService.syncMealPlanEntryToTracking(
+                    profileId,
+                    command.recipeId(),
+                    mealTypeEnum.name(),
+                    command.day()
+            );
+
+            logger.info("Successfully synced meal-plan entry {} to tracking for profileId={}",
+                    savedEntry.getId(), profileId);
+
+        } catch (Exception ex) {
+            // No romper el flujo principal si falla la sincronización
+            logger.error("Error during tracking sync for mealPlanEntry {}: {}",
+                    savedEntry.getId(), ex.getMessage(), ex);
         }
     }
 
+    /**
+     * Extrae el ID de perfil del value object UserProfileId.
+     * Retorna Long (convierte de int a long).
+     */
     private Long extractProfileId(Object profileVo) {
         if (profileVo == null) {
             return null;
         }
 
+        // Caso directo: si es el VO UserProfileId
         if (profileVo instanceof UserProfileId) {
             int id = ((UserProfileId) profileVo).userProfileId();
-            return id > 0 ? (long) id : null;
+            return id > 0 ? Long.valueOf(id) : null;
         }
 
+        // Fallback: intentar obtener por reflection
         try {
             var method = profileVo.getClass().getMethod("userProfileId");
             Object val = method.invoke(profileVo);
@@ -140,6 +180,7 @@ public class MealPlanEntryCommandServiceImpl implements MealPlanEntryCommandServ
         } catch (Exception e) {
             logger.warn("Could not extract profileId from {}: {}", profileVo.getClass().getName(), e.getMessage());
         }
+
         return null;
     }
 }

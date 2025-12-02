@@ -5,3 +5,4 @@ import pe.edu.upc.mealplan_service.mealplan.domain.model.commands.SeedMealPlanTy
 public interface MealPlanTypeCommandService {
     void handle(SeedMealPlanTypesCommand command);
 }
+

@@ -20,11 +20,11 @@ public class MealPlanTypeCommandServiceImpl implements MealPlanTypeCommandServic
 
     @Override
     public void handle(SeedMealPlanTypesCommand command) {
-        Arrays.stream(MealPlanTypes.values())
-                .forEach(mealPlanType -> {
-                    if (!mealPlanTypeRepository.existsByType(mealPlanType)) {
-                        mealPlanTypeRepository.save(new MealPlanType(MealPlanTypes.valueOf(mealPlanType.name())));
-                    }
-                });
+        Arrays.stream(MealPlanTypes.values()).forEach(type -> {
+            if (mealPlanTypeRepository.findByType(type).isEmpty()) {
+                mealPlanTypeRepository.save(new MealPlanType(type));
+            }
+        });
     }
 }
+

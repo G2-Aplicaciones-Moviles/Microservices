@@ -12,6 +12,7 @@ public record CreateMealPlanResource(
         Integer profileId,
         String category,
         Boolean isCurrent,
-        List<String> tags
+        List<String> tags,
+        Integer createdByNutritionistId
 ) {
 }
