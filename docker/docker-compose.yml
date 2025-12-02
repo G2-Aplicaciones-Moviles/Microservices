@@ -1,6 +1,6 @@
 services:
   config-service:
-    build: ./config-service
+    build: ../platform/config-service
     container_name: config-service
     environment:
       - SPRING_PROFILES_ACTIVE=native
@@ -12,7 +12,7 @@ services:
       retries: 10
 
   eureka-service:
-    build: ./eureka-service
+    build: ../platform/eureka-service
     container_name: eureka-service
     depends_on:
       config-service:
@@ -25,7 +25,7 @@ services:
       retries: 10
 
   iam-service:
-    build: ./iam-service
+    build: ../services/iam-service
     container_name: iam-service
     depends_on:
       eureka-service:
@@ -43,17 +43,17 @@ services:
       retries: 10
 
   goals-service:
-    build: ./goals-service
+    build: ../services/goals-service
     container_name: goals-service
     depends_on:
       iam-service:
         condition: service_healthy
     environment:
-      - POSTGRES_HOST=${DELIVERY_POSTGRES_HOST}
-      - POSTGRES_PORT=${DELIVERY_POSTGRES_PORT}
-      - POSTGRES_DATABASE=${DELIVERY_POSTGRES_DATABASE}
-      - POSTGRES_USER=${DELIVERY_POSTGRES_USER}
-      - POSTGRES_PASSWORD=${DELIVERY_POSTGRES_PASSWORD}
+      - POSTGRES_HOST=${GOALS_POSTGRES_HOST}
+      - POSTGRES_PORT=${GOALS_POSTGRES_PORT}
+      - POSTGRES_DATABASE=${GOALS_POSTGRES_DATABASE}
+      - POSTGRES_USER=${GOALS_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${GOALS_POSTGRES_PASSWORD}
     healthcheck:
       test: [ "CMD","curl","-f","http://localhost:8083/actuator/health" ]
       interval: 10s
@@ -61,53 +61,53 @@ services:
       retries: 10
 
   mealplan-service:
-    build: ./mealplan-service
+    build: ../services/mealplan-service
     container_name: mealplan-service
     depends_on:
       iam-service:
         condition: service_healthy
     environment:
-      - POSTGRES_HOST=${DELIVERY_POSTGRES_HOST}
-      - POSTGRES_PORT=${DELIVERY_POSTGRES_PORT}
-      - POSTGRES_DATABASE=${DELIVERY_POSTGRES_DATABASE}
-      - POSTGRES_USER=${DELIVERY_POSTGRES_USER}
-      - POSTGRES_PASSWORD=${DELIVERY_POSTGRES_PASSWORD}
+      - POSTGRES_HOST=${MEALPLAN_POSTGRES_HOST}
+      - POSTGRES_PORT=${MEALPLAN_POSTGRES_PORT}
+      - POSTGRES_DATABASE=${MEALPLAN_POSTGRES_DATABASE}
+      - POSTGRES_USER=${MEALPLAN_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${MEALPLAN_POSTGRES_PASSWORD}
     healthcheck:
       test: [ "CMD","curl","-f","http://localhost:8084/actuator/health" ]
       interval: 10s
       timeout: 3s
       retries: 10
 
-  nutrition-service:
-    build: ./nutrition-service
-    container_name: nutrition-service
+  nutritionist-service:
+    build: ../services/nutritionist-service
+    container_name: nutritionist-service
     depends_on:
       iam-service:
         condition: service_healthy
     environment:
-      - POSTGRES_HOST=${DELIVERY_POSTGRES_HOST}
-      - POSTGRES_PORT=${DELIVERY_POSTGRES_PORT}
-      - POSTGRES_DATABASE=${DELIVERY_POSTGRES_DATABASE}
-      - POSTGRES_USER=${DELIVERY_POSTGRES_USER}
-      - POSTGRES_PASSWORD=${DELIVERY_POSTGRES_PASSWORD}
+      - POSTGRES_HOST=${NUTRITIONIST_POSTGRES_HOST}
+      - POSTGRES_PORT=${NUTRITIONIST_POSTGRES_PORT}
+      - POSTGRES_DATABASE=${NUTRITIONIST_POSTGRES_DATABASE}
+      - POSTGRES_USER=${NUTRITIONIST_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${NUTRITIONIST_POSTGRES_PASSWORD}
     healthcheck:
       test: [ "CMD","curl","-f","http://localhost:8085/actuator/health" ]
       interval: 10s
       timeout: 3s
       retries: 10
 
-  profile-service:
-    build: ./profile-service
-    container_name: profile-service
+  profiles-service:
+    build: ../services/profiles-service
+    container_name: profiles-service
     depends_on:
       iam-service:
         condition: service_healthy
     environment:
-      - POSTGRES_HOST=${DELIVERY_POSTGRES_HOST}
-      - POSTGRES_PORT=${DELIVERY_POSTGRES_PORT}
-      - POSTGRES_DATABASE=${DELIVERY_POSTGRES_DATABASE}
-      - POSTGRES_USER=${DELIVERY_POSTGRES_USER}
-      - POSTGRES_PASSWORD=${DELIVERY_POSTGRES_PASSWORD}
+      - POSTGRES_HOST=${PROFILES_POSTGRES_HOST}
+      - POSTGRES_PORT=${PROFILES_POSTGRES_PORT}
+      - POSTGRES_DATABASE=${PROFILES_POSTGRES_DATABASE}
+      - POSTGRES_USER=${PROFILES_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${PROFILES_POSTGRES_PASSWORD}
     healthcheck:
       test: [ "CMD","curl","-f","http://localhost:8086/actuator/health" ]
       interval: 10s
@@ -115,35 +115,35 @@ services:
       retries: 10
 
   recipes-service:
-    build: ./recipes-service
+    build: ../services/recipes-service
     container_name: recipes-service
     depends_on:
       iam-service:
         condition: service_healthy
     environment:
-      - POSTGRES_HOST=${DELIVERY_POSTGRES_HOST}
-      - POSTGRES_PORT=${DELIVERY_POSTGRES_PORT}
-      - POSTGRES_DATABASE=${DELIVERY_POSTGRES_DATABASE}
-      - POSTGRES_USER=${DELIVERY_POSTGRES_USER}
-      - POSTGRES_PASSWORD=${DELIVERY_POSTGRES_PASSWORD}
+      - POSTGRES_HOST=${RECIPES_POSTGRES_HOST}
+      - POSTGRES_PORT=${RECIPES_POSTGRES_PORT}
+      - POSTGRES_DATABASE=${RECIPES_POSTGRES_DATABASE}
+      - POSTGRES_USER=${RECIPES_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${RECIPES_POSTGRES_PASSWORD}
     healthcheck:
       test: [ "CMD","curl","-f","http://localhost:8087/actuator/health" ]
       interval: 10s
       timeout: 3s
       retries: 10
 
-  recommendation-service:
-    build: ./recommendation-service
-    container_name: recommendation-service
+  recommendations-service:
+    build: ../services/recommendations-service
+    container_name: recommendations-service
     depends_on:
       iam-service:
         condition: service_healthy
     environment:
-      - POSTGRES_HOST=${DELIVERY_POSTGRES_HOST}
-      - POSTGRES_PORT=${DELIVERY_POSTGRES_PORT}
-      - POSTGRES_DATABASE=${DELIVERY_POSTGRES_DATABASE}
-      - POSTGRES_USER=${DELIVERY_POSTGRES_USER}
-      - POSTGRES_PASSWORD=${DELIVERY_POSTGRES_PASSWORD}
+      - POSTGRES_HOST=${RECOMMENDATIONS_POSTGRES_HOST}
+      - POSTGRES_PORT=${RECOMMENDATIONS_POSTGRES_PORT}
+      - POSTGRES_DATABASE=${RECOMMENDATIONS_POSTGRES_DATABASE}
+      - POSTGRES_USER=${RECOMMENDATIONS_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${RECOMMENDATIONS_POSTGRES_PASSWORD}
     healthcheck:
       test: [ "CMD","curl","-f","http://localhost:8088/actuator/health" ]
       interval: 10s
@@ -151,17 +151,17 @@ services:
       retries: 10
 
   tracking-service:
-    build: ./tracking-service
+    build: ../services/tracking-service
     container_name: tracking-service
     depends_on:
       iam-service:
         condition: service_healthy
     environment:
-      - POSTGRES_HOST=${FLEET_POSTGRES_HOST}
-      - POSTGRES_PORT=${FLEET_POSTGRES_PORT}
-      - POSTGRES_DATABASE=${FLEET_POSTGRES_DATABASE}
-      - POSTGRES_USER=${FLEET_POSTGRES_USER}
-      - POSTGRES_PASSWORD=${FLEET_POSTGRES_PASSWORD}
+      - POSTGRES_HOST=${TRACKING_POSTGRES_HOST}
+      - POSTGRES_PORT=${TRACKING_POSTGRES_PORT}
+      - POSTGRES_DATABASE=${TRACKING_POSTGRES_DATABASE}
+      - POSTGRES_USER=${TRACKING_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${TRACKING_POSTGRES_PASSWORD}
     healthcheck:
       test: [ "CMD","curl","-f","http://localhost:8089/actuator/health" ]
       interval: 10s
@@ -169,16 +169,28 @@ services:
       retries: 10
 
   gateway-service:
-    build: ./gateway-service
+    build: ../platform/gateway-service
     container_name: gateway-service
     depends_on:
       eureka-service:
         condition: service_healthy
       iam-service:
         condition: service_healthy
-      fleet-service:
+#      chat-service:
+#        condition: service_healthy
+      goals-service:
         condition: service_healthy
-      delivery-service:
+      mealplan-service:
+        condition: service_healthy
+      nutritionist-service:
+        condition: service_healthy
+      profiles-service:
+        condition: service_healthy
+      recipes-service:
+        condition: service_healthy
+      recommendations-service:
+        condition: service_healthy
+      tracking-service:
         condition: service_healthy
     ports: [ "8080:8080" ]
     healthcheck:
