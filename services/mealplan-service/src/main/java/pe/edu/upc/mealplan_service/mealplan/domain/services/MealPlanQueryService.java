@@ -7,7 +7,6 @@ import pe.edu.upc.mealplan_service.mealplan.domain.model.queries.GetEntriesWithR
 import pe.edu.upc.mealplan_service.mealplan.domain.model.queries.GetMealPlanByIdQuery;
 import pe.edu.upc.mealplan_service.mealplan.domain.model.queries.GetOriginalTemplatesQuery;
 import pe.edu.upc.mealplan_service.mealplan.interfaces.rest.resources.MealPlanEntryDetailedResource;
-import pe.edu.upc.mealplan_service.mealplan.interfaces.rest.resources.RecipeResource;
 
 import java.util.List;
 import java.util.Optional;
