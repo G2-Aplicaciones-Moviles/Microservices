@@ -23,3 +23,4 @@ public interface MealPlanQueryService {
 
     List<MealPlanEntryDetailedResource> handle(GetEntriesWithRecipeInfo query);
 }
+

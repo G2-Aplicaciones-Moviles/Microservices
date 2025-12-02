@@ -28,7 +28,6 @@ public class MealPlanQueryServiceImpl implements MealPlanQueryService {
         this.externalRecipeService = externalRecipeService;
         this.mealPlanEntryRepository = mealPlanEntryRepository;
     }
-
     @Override
     public Optional<MealPlan> handle(GetMealPlanByIdQuery query) {
         return this.mealPlanRepository.findById(query.mealPlanId());
