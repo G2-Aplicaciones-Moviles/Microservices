@@ -34,3 +34,9 @@ build/
 
 ### Environment Files ###
 .env
+
+### Seguridad: Ignorar llaves RSA ###
+*.key
+*.pub
+*.pem
+*.pkcs8

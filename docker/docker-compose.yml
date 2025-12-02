@@ -42,24 +42,6 @@ services:
       timeout: 3s
       retries: 10
 
-  chat-service:
-    build: ./chat-service
-    container_name: chat-service
-    depends_on:
-      iam-service:
-        condition: service_healthy
-    environment:
-      - POSTGRES_HOST=${CHAT_POSTGRES_HOST}
-      - POSTGRES_PORT=${CHAT_POSTGRES_PORT}
-      - POSTGRES_DATABASE=${CHAT_POSTGRES_DATABASE}
-      - POSTGRES_USER=${CHAT_POSTGRES_USER}
-      - POSTGRES_PASSWORD=${FLEET_POSTGRES_PASSWORD}
-    healthcheck:
-      test: [ "CMD","curl","-f","http://localhost:8082/actuator/health" ]
-      interval: 10s
-      timeout: 3s
-      retries: 10
-
   goals-service:
     build: ./goals-service
     container_name: goals-service
