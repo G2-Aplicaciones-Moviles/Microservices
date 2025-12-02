@@ -10,7 +10,7 @@ public class IngredientResourceFromEntityAssembler {
 
     public static IngredientResource toResourceFromEntity(Ingredient ingredient) {
         return new IngredientResource(
-                ingredient.getId(),
+                ingredient.getId().intValue(),
                 ingredient.getName(),
                 ingredient.getCalories(),
                 ingredient.getProteins(),

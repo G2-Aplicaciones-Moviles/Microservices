@@ -1,7 +1,7 @@
 package pe.edu.upc.recipes_service.recipes.interfaces.rest.transform;
 
-import pe.edu.upc.center.jameoFit.recipes.domain.model.entities.Category;
-import pe.edu.upc.center.jameoFit.recipes.interfaces.rest.resources.CategoryResource;
+import pe.edu.upc.recipes_service.recipes.domain.model.entities.Category;
+import pe.edu.upc.recipes_service.recipes.interfaces.rest.resources.CategoryResource;
 
 import java.util.List;
 import java.util.stream.Collectors;

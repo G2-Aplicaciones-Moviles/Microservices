@@ -12,7 +12,7 @@ public class FavoriteRecipeResourceFromEntityAssembler {
         return new FavoriteRecipeResource(
                 favoriteRecipe.getId(),
                 favoriteRecipe.getUserId(),
-                favoriteRecipe.getRecipe().getId(),
+                favoriteRecipe.getRecipe().getId().intValue(),
                 favoriteRecipe.getRecipe().getName()
         );
     }
