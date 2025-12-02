@@ -78,6 +78,114 @@ services:
       timeout: 3s
       retries: 10
 
+  mealplan-service:
+    build: ./mealplan-service
+    container_name: mealplan-service
+    depends_on:
+      iam-service:
+        condition: service_healthy
+    environment:
+      - POSTGRES_HOST=${DELIVERY_POSTGRES_HOST}
+      - POSTGRES_PORT=${DELIVERY_POSTGRES_PORT}
+      - POSTGRES_DATABASE=${DELIVERY_POSTGRES_DATABASE}
+      - POSTGRES_USER=${DELIVERY_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${DELIVERY_POSTGRES_PASSWORD}
+    healthcheck:
+      test: [ "CMD","curl","-f","http://localhost:8084/actuator/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  nutrition-service:
+    build: ./nutrition-service
+    container_name: nutrition-service
+    depends_on:
+      iam-service:
+        condition: service_healthy
+    environment:
+      - POSTGRES_HOST=${DELIVERY_POSTGRES_HOST}
+      - POSTGRES_PORT=${DELIVERY_POSTGRES_PORT}
+      - POSTGRES_DATABASE=${DELIVERY_POSTGRES_DATABASE}
+      - POSTGRES_USER=${DELIVERY_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${DELIVERY_POSTGRES_PASSWORD}
+    healthcheck:
+      test: [ "CMD","curl","-f","http://localhost:8085/actuator/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  profile-service:
+    build: ./profile-service
+    container_name: profile-service
+    depends_on:
+      iam-service:
+        condition: service_healthy
+    environment:
+      - POSTGRES_HOST=${DELIVERY_POSTGRES_HOST}
+      - POSTGRES_PORT=${DELIVERY_POSTGRES_PORT}
+      - POSTGRES_DATABASE=${DELIVERY_POSTGRES_DATABASE}
+      - POSTGRES_USER=${DELIVERY_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${DELIVERY_POSTGRES_PASSWORD}
+    healthcheck:
+      test: [ "CMD","curl","-f","http://localhost:8086/actuator/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  recipes-service:
+    build: ./recipes-service
+    container_name: recipes-service
+    depends_on:
+      iam-service:
+        condition: service_healthy
+    environment:
+      - POSTGRES_HOST=${DELIVERY_POSTGRES_HOST}
+      - POSTGRES_PORT=${DELIVERY_POSTGRES_PORT}
+      - POSTGRES_DATABASE=${DELIVERY_POSTGRES_DATABASE}
+      - POSTGRES_USER=${DELIVERY_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${DELIVERY_POSTGRES_PASSWORD}
+    healthcheck:
+      test: [ "CMD","curl","-f","http://localhost:8087/actuator/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  recommendation-service:
+    build: ./recommendation-service
+    container_name: recommendation-service
+    depends_on:
+      iam-service:
+        condition: service_healthy
+    environment:
+      - POSTGRES_HOST=${DELIVERY_POSTGRES_HOST}
+      - POSTGRES_PORT=${DELIVERY_POSTGRES_PORT}
+      - POSTGRES_DATABASE=${DELIVERY_POSTGRES_DATABASE}
+      - POSTGRES_USER=${DELIVERY_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${DELIVERY_POSTGRES_PASSWORD}
+    healthcheck:
+      test: [ "CMD","curl","-f","http://localhost:8088/actuator/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  tracking-service:
+    build: ./tracking-service
+    container_name: tracking-service
+    depends_on:
+      iam-service:
+        condition: service_healthy
+    environment:
+      - POSTGRES_HOST=${FLEET_POSTGRES_HOST}
+      - POSTGRES_PORT=${FLEET_POSTGRES_PORT}
+      - POSTGRES_DATABASE=${FLEET_POSTGRES_DATABASE}
+      - POSTGRES_USER=${FLEET_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${FLEET_POSTGRES_PASSWORD}
+    healthcheck:
+      test: [ "CMD","curl","-f","http://localhost:8089/actuator/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
   gateway-service:
     build: ./gateway-service
     container_name: gateway-service
