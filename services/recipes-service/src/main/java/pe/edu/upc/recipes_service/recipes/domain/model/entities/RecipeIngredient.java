@@ -29,7 +29,6 @@ public class RecipeIngredient {
     @JoinColumn(name = "ingredient_id")
     private Ingredient ingredient;
 
-    // cantidad en gramos (ajústalo si usarás otra unidad)
     @Column(name = "amount_grams", nullable = false)
     private double amountGrams;
 

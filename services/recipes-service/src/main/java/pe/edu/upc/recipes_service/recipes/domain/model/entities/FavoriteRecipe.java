@@ -19,17 +19,14 @@ public class FavoriteRecipe extends AuditableModel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 👉 Usuario que marcó la receta como favorita (value object)
     @Embedded
     @AttributeOverride(name = "userId", column = @Column(name = "user_id", nullable = false))
     private UserId userId;
 
-    // 👉 Receta marcada como favorita
     @ManyToOne
     @JoinColumn(name = "recipe_id", nullable = false)
     private Recipe recipe;
 
-    // ------------------------------------------
     public FavoriteRecipe(UserId userId, Recipe recipe) {
         this.userId = userId;
         this.recipe = recipe;

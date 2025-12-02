@@ -1,11 +1,10 @@
 package pe.edu.upc.recipes_service.recipes.aplication.internal.commandservices;
 
 import org.springframework.stereotype.Service;
-import pe.edu.upc.recipes_service.recipes.aplication.internal.outboundedservices.ExternalProfileAndTrackingService;
+import pe.edu.upc.recipes_service.recipes.aplication.internal.outboundedservices.acl.ExternalTrackingService;
 import pe.edu.upc.recipes_service.recipes.domain.model.aggregates.Ingredient;
 import pe.edu.upc.recipes_service.recipes.domain.model.commands.CreateIngredientCommand;
 import pe.edu.upc.recipes_service.recipes.domain.model.commands.DeleteIngredientCommand;
-import pe.edu.upc.recipes_service.recipes.domain.model.valueobjects.MacronutrientValuesId;
 import pe.edu.upc.recipes_service.recipes.domain.services.IngredientCommandService;
 import pe.edu.upc.recipes_service.recipes.infrastructure.persistence.jpa.repositories.IngredientRepository;
 
@@ -13,11 +12,12 @@ import pe.edu.upc.recipes_service.recipes.infrastructure.persistence.jpa.reposit
 public class IngredientCommandServiceImpl implements IngredientCommandService {
 
     private final IngredientRepository ingredientRepository;
-    private final ExternalProfileAndTrackingService externalProfileAndTrackingService;
+    private final ExternalTrackingService externalTrackingService;
 
-    public IngredientCommandServiceImpl(IngredientRepository ingredientRepository, ExternalProfileAndTrackingService externalProfileAndTrackingService) {
+    public IngredientCommandServiceImpl(IngredientRepository ingredientRepository,
+                                        ExternalTrackingService externalTrackingService) {
         this.ingredientRepository = ingredientRepository;
-        this.externalProfileAndTrackingService = externalProfileAndTrackingService;
+        this.externalTrackingService = externalTrackingService;
     }
 
     @Override
@@ -28,7 +28,7 @@ public class IngredientCommandServiceImpl implements IngredientCommandService {
         }
 
         // Validar existencia de MacronutrientValuesId
-        externalProfileAndTrackingService.validateMacronutrientValuesExists(new MacronutrientValuesId(command.macronutrientValuesId()));
+        externalTrackingService.validateMacronutrientValuesExists(command.macronutrientValuesId());
 
         // Crear ingrediente
         var ingredient = new Ingredient(
@@ -46,7 +46,7 @@ public class IngredientCommandServiceImpl implements IngredientCommandService {
             throw new IllegalArgumentException("Error while saving ingredient: " + e.getMessage());
         }
 
-        return ingredient.getId();
+        return ingredient.getId().intValue();
     }
 
     @Override

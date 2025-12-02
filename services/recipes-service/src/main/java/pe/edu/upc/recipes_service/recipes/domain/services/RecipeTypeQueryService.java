@@ -9,5 +9,6 @@ import java.util.Optional;
 
 public interface RecipeTypeQueryService {
     List<RecipeType> handle(GetAllRecipesTypesQuery query);
+
     Optional<RecipeType> handle(GetRecipeTypeByIdQuery query);
 }

@@ -36,11 +36,6 @@ public class Ingredient extends AuditableAbstractAggregateRoot<Ingredient> {
     })
     private MacronutrientValuesId macronutrientValuesId = new MacronutrientValuesId();
 
-    // 🔥 Eliminado el @ManyToMany(mappedBy = "ingredients")
-    // Ya no existe vínculo directo con Recipe, se maneja por RecipeIngredient.
-
-    // -----------------------------------
-
     public Ingredient(String name, double calories, double carbohydrates, double proteins, double fats, Long macronutrientValuesId) {
         this.name = name;
         this.calories = calories;

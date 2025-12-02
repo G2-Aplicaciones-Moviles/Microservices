@@ -22,7 +22,7 @@ public class FavoriteRecipeCommandServiceImpl implements FavoriteRecipeCommandSe
 
     @Override
     public Long handle(CreateFavoriteRecipeCommand command) {
-        if (favoriteRecipeRepository.existsByUserIdAndRecipeId(command.userId(), command.recipeId())) {
+        if (favoriteRecipeRepository.existsByUserId_UserIdAndRecipe_Id(command.userId(), command.recipeId())) {
             throw new IllegalArgumentException("Recipe already marked as favorite.");
         }
 
@@ -39,9 +39,9 @@ public class FavoriteRecipeCommandServiceImpl implements FavoriteRecipeCommandSe
 
     @Override
     public void handle(DeleteFavoriteRecipeCommand command) {
-        if (!favoriteRecipeRepository.existsByUserIdAndRecipeId(command.userId(), command.recipeId())) {
+        if (!favoriteRecipeRepository.existsByUserId_UserIdAndRecipe_Id(command.userId(), command.recipeId())) {
             throw new IllegalArgumentException("Favorite recipe not found.");
         }
-        favoriteRecipeRepository.existsByUserIdAndRecipeId(command.userId(), command.recipeId());
+        favoriteRecipeRepository.deleteByUserId_UserIdAndRecipe_Id(command.userId(), command.recipeId());
     }
 }

@@ -3,6 +3,7 @@ package pe.edu.upc.recipes_service.recipes.aplication.internal.queryservices;
 import org.springframework.stereotype.Service;
 import pe.edu.upc.recipes_service.recipes.domain.model.aggregates.Recipe;
 import pe.edu.upc.recipes_service.recipes.domain.model.queries.GetAllRecipesByCategoryIdQuery;
+import pe.edu.upc.recipes_service.recipes.domain.model.queries.GetAllRecipesByProfileIdQuery;
 import pe.edu.upc.recipes_service.recipes.domain.model.queries.GetAllRecipesQuery;
 import pe.edu.upc.recipes_service.recipes.domain.model.queries.GetRecipesByIdQuery;
 import pe.edu.upc.recipes_service.recipes.domain.services.RecipeQueryService;
@@ -33,5 +34,10 @@ public class RecipeQueryServiceImpl implements RecipeQueryService {
     @Override
     public Optional<Recipe> handle(GetRecipesByIdQuery query) {
         return recipeRepository.findById(query.recipeId());
+    }
+
+    @Override
+    public List<Recipe> handle(GetAllRecipesByProfileIdQuery query) {
+        return recipeRepository.findAllByAssignedToProfileId(query.profileId());
     }
 }

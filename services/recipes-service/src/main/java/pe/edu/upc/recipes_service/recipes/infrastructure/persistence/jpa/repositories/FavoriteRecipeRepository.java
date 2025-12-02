@@ -9,8 +9,12 @@ import java.util.Optional;
 
 @Repository
 public interface FavoriteRecipeRepository extends JpaRepository<FavoriteRecipe, Long> {
-    List<FavoriteRecipe> findByUserId(Long userId);
-    Optional<FavoriteRecipe> findByUserIdAndRecipeId(Long userId, int recipeId);
-    boolean existsByUserIdAndRecipeId(Long userId, int recipeId);
-    void deleteByUserIdAndRecipeId(Long userId, int recipeId);
+    List<FavoriteRecipe> findByUserId_UserId(Long userId);
+
+    Optional<FavoriteRecipe> findByUserId_UserIdAndRecipe_Id(Long userId, int recipeId);
+
+    boolean existsByUserId_UserIdAndRecipe_Id(Long userId, int recipeId);
+
+    void deleteByUserId_UserIdAndRecipe_Id(Long userId, int recipeId);
+
 }

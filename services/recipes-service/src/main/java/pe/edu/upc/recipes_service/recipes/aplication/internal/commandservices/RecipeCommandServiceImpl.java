@@ -2,13 +2,12 @@ package pe.edu.upc.recipes_service.recipes.aplication.internal.commandservices;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import pe.edu.upc.recipes_service.recipes.aplication.internal.outboundedservices.ExternalProfileAndTrackingService;
+import pe.edu.upc.recipes_service.recipes.aplication.internal.outboundedservices.acl.ExternalUserProfileService;
 import pe.edu.upc.recipes_service.recipes.domain.model.aggregates.Recipe;
 import pe.edu.upc.recipes_service.recipes.domain.model.commands.AddIngredientToRecipeCommand;
 import pe.edu.upc.recipes_service.recipes.domain.model.commands.CreateRecipeCommand;
 import pe.edu.upc.recipes_service.recipes.domain.model.commands.DeleteRecipeCommand;
 import pe.edu.upc.recipes_service.recipes.domain.model.commands.UpdateRecipeCommand;
-import pe.edu.upc.recipes_service.recipes.domain.model.valueobjects.UserId;
 import pe.edu.upc.recipes_service.recipes.domain.services.RecipeCommandService;
 import pe.edu.upc.recipes_service.recipes.infrastructure.persistence.jpa.repositories.CategoryRepository;
 import pe.edu.upc.recipes_service.recipes.infrastructure.persistence.jpa.repositories.IngredientRepository;
@@ -24,14 +23,18 @@ public class RecipeCommandServiceImpl implements RecipeCommandService {
     private final CategoryRepository categoryRepository;
     private final RecipeTypeRepository recipeTypeRepository;
     private final IngredientRepository ingredientRepository;
-    private final ExternalProfileAndTrackingService externalProfileAndTrackingService;
+    private final ExternalUserProfileService externalUserProfileService;
 
-    public RecipeCommandServiceImpl(RecipeRepository recipeRepository, CategoryRepository categoryRepository, RecipeTypeRepository recipeTypeRepository, IngredientRepository ingredientRepository, @Lazy ExternalProfileAndTrackingService externalProfileAndTrackingService) {
+    public RecipeCommandServiceImpl(RecipeRepository recipeRepository,
+                                    CategoryRepository categoryRepository,
+                                    RecipeTypeRepository recipeTypeRepository,
+                                    IngredientRepository ingredientRepository,
+                                    @Lazy ExternalUserProfileService externalUserProfileService) {
         this.recipeRepository = recipeRepository;
         this.categoryRepository = categoryRepository;
         this.recipeTypeRepository = recipeTypeRepository;
         this.ingredientRepository = ingredientRepository;
-        this.externalProfileAndTrackingService = externalProfileAndTrackingService;
+        this.externalUserProfileService = externalUserProfileService;
     }
 
     @Override
@@ -41,23 +44,30 @@ public class RecipeCommandServiceImpl implements RecipeCommandService {
             throw new IllegalArgumentException("A recipe with the name " + command.name() + " already exists.");
         }
 
-        // Validar existencia de UserId
-        externalProfileAndTrackingService.validateUserExists(new UserId(command.userId()));
-
         var category = categoryRepository.findById(command.categoryId())
                 .orElseThrow(() -> new IllegalArgumentException("Category not found"));
 
         var recipeType = recipeTypeRepository.findById(command.recipeTypeId())
                 .orElseThrow(() -> new IllegalArgumentException("Recipe type not found"));
 
+        if (command.createdByNutritionistId() != null) {
+            externalUserProfileService.validateUserExists(command.createdByNutritionistId());
+        }
+
+        if (command.assignedToProfileId() != null) {
+            externalUserProfileService.validateUserExists(command.assignedToProfileId().longValue());
+        }
+
         var recipe = new Recipe(
-                command.userId(),
                 command.name(),
                 command.description(),
                 command.preparationTime(),
                 command.difficulty(),
                 category,
-                recipeType
+                recipeType,
+                // Nuevos campos del command
+                command.createdByNutritionistId(),
+                command.assignedToProfileId()
         );
 
         try {
@@ -66,7 +76,7 @@ public class RecipeCommandServiceImpl implements RecipeCommandService {
             throw new IllegalArgumentException("Error while saving recipe: " + e.getMessage());
         }
 
-        return recipe.getId();
+        return recipe.getId().intValue();
     }
 
     @Override

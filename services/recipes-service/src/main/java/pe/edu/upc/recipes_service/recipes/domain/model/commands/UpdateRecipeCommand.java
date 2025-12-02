@@ -8,4 +8,5 @@ public record UpdateRecipeCommand(
         String difficulty,
         Long categoryId,
         Long recipeTypeId
-) { }
+) {
+}

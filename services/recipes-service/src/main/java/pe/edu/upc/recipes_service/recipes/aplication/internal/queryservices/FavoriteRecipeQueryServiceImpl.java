@@ -21,11 +21,11 @@ public class FavoriteRecipeQueryServiceImpl implements FavoriteRecipeQueryServic
 
     @Override
     public Optional<FavoriteRecipe> handle(GetFavoriteRecipeByUserIdAndRecipeIdQuery query) {
-        return favoriteRecipeRepository.findByUserIdAndRecipeId(query.userId(), query.recipeId());
+        return favoriteRecipeRepository.findByUserId_UserIdAndRecipe_Id(query.userId(), query.recipeId());
     }
 
     @Override
     public List<FavoriteRecipe> handle(GetAllFavoriteRecipesByUserIdQuery query) {
-        return favoriteRecipeRepository.findByUserId(query.userId());
+        return favoriteRecipeRepository.findByUserId_UserId(query.userId());
     }
 }
