@@ -12,6 +12,7 @@ import pe.edu.upc.iam_service.iam.domain.services.UserCommandService;
 import pe.edu.upc.iam_service.iam.infrastructure.persistence.jpa.repositories.RoleRepository;
 import pe.edu.upc.iam_service.iam.infrastructure.persistence.jpa.repositories.UserRepository;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
 @Service
@@ -38,12 +39,17 @@ public class UserCommandServiceImpl implements UserCommandService {
         if (userRepository.existsByUsername(command.username()))
             throw new RuntimeException("Username already exists");
 
-        var roles = command.roles();
+        var roles = new ArrayList<>(command.roles());
         if (roles.isEmpty()) {
             var role = roleRepository.findByName(Roles.ROLE_CUSTOMER);
             if (role.isPresent()) roles.add(role.get());
-        } else roles = roles.stream().map(role -> roleRepository.findByName(role.getName())
-                .orElseThrow(() -> new RuntimeException("Role not found"))).toList();
+        } else {
+            var foundRoles = roles.stream()
+                    .map(role -> roleRepository.findByName(role.getName())
+                            .orElseThrow(() -> new RuntimeException("Role not found")))
+                    .toList();
+            roles = new ArrayList<>(foundRoles);
+        }
         var user = new User(
                 command.username(),
                 hashingService.encode(command.password()),
