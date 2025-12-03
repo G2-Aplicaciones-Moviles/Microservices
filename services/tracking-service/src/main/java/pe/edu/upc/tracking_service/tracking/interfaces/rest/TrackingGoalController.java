@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pe.edu.upc.tracking_service.tracking.application.internal.commandservices.MacronutrientValuesCommandServiceImpl;
 import pe.edu.upc.tracking_service.tracking.application.internal.commandservices.TrackingGoalCommandServiceImpl;
+import pe.edu.upc.tracking_service.tracking.domain.model.Entities.TrackingGoal;
 import pe.edu.upc.tracking_service.tracking.domain.model.commands.UpdateTrackingGoalCommand;
 import pe.edu.upc.tracking_service.tracking.domain.model.queries.GetTargetMacronutrientsQuery;
 import pe.edu.upc.tracking_service.tracking.domain.model.queries.GetTrackingGoalByUserIdQuery;
@@ -17,6 +18,7 @@ import pe.edu.upc.tracking_service.tracking.domain.model.valueobjects.GoalTypes;
 import pe.edu.upc.tracking_service.tracking.domain.model.valueobjects.UserId;
 import pe.edu.upc.tracking_service.tracking.domain.services.TrackingGoalQueryService;
 import pe.edu.upc.tracking_service.tracking.infrastructure.persistence.jpa.repositories.MacronutrientValuesRepository;
+import pe.edu.upc.tracking_service.tracking.infrastructure.persistence.jpa.repositories.TrackingGoalRepository;
 import pe.edu.upc.tracking_service.tracking.interfaces.rest.resources.*;
 import pe.edu.upc.tracking_service.tracking.interfaces.rest.transform.CreateTrackingGoalCommandFromResourceAssembler;
 import pe.edu.upc.tracking_service.tracking.interfaces.rest.transform.MacronutrientValuesResourceFromEntityAssembler;
@@ -24,6 +26,7 @@ import pe.edu.upc.tracking_service.tracking.interfaces.rest.transform.TrackingGo
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping(value = "/api/v1/tracking-goals", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -34,15 +37,18 @@ public class TrackingGoalController {
     private final MacronutrientValuesCommandServiceImpl macronutrientValuesCommandService;
     private final TrackingGoalCommandServiceImpl trackingGoalCommandService;
     private final MacronutrientValuesRepository macronutrientValuesRepository;
+    private final TrackingGoalRepository trackingGoalRepository;
 
     public TrackingGoalController(TrackingGoalQueryService trackingGoalQueryService,
                                   MacronutrientValuesCommandServiceImpl macronutrientValuesCommandService,
                                   TrackingGoalCommandServiceImpl trackingGoalCommandService,
-                                  MacronutrientValuesRepository macronutrientValuesRepository) {
+                                  MacronutrientValuesRepository macronutrientValuesRepository,
+                                  TrackingGoalRepository trackingGoalRepository) {
         this.trackingGoalQueryService = trackingGoalQueryService;
         this.macronutrientValuesCommandService = macronutrientValuesCommandService;
         this.trackingGoalCommandService = trackingGoalCommandService;
         this.macronutrientValuesRepository = macronutrientValuesRepository;
+        this.trackingGoalRepository = trackingGoalRepository;
     }
 
     @Operation(
@@ -194,22 +200,29 @@ public class TrackingGoalController {
 
     @Operation(
             summary = "Create tracking goal from profile objective",
-            description = "Creates a tracking goal automatically based on the user's profile objective",
+            description = "Creates a tracking goal automatically based on the user's profile objective. Idempotent - returns existing goal if already exists.",
             responses = {
                     @ApiResponse(responseCode = "201", description = "Tracking goal created successfully"),
+                    @ApiResponse(responseCode = "200", description = "Tracking goal already exists, returning existing ID"),
                     @ApiResponse(responseCode = "400", description = "Invalid profile or objective"),
-                    @ApiResponse(responseCode = "409", description = "Tracking goal already exists for user")
+                    @ApiResponse(responseCode = "404", description = "User or profile not found")
             }
     )
-    @PostMapping("/from-profile/{profileId}")
-    public ResponseEntity<Long> createTrackingGoalFromProfile(@PathVariable Long profileId) {
+    @PostMapping("/from-profile/{userId}")
+    public ResponseEntity<Long> createTrackingGoalFromProfile(@PathVariable Long userId) {
         try {
-            Long goalId = trackingGoalCommandService.createTrackingGoalFromProfile(profileId);
+            Optional<TrackingGoal> existingGoalOpt = trackingGoalRepository.findByUserId(new UserId(userId));
+            if (existingGoalOpt.isPresent()) {
+                Long existingGoalId = existingGoalOpt.get().getId();
+                return ResponseEntity.ok(existingGoalId);
+            }
+
+            Long goalId = trackingGoalCommandService.createTrackingGoalFromProfile(userId);
             return ResponseEntity.status(201).body(goalId);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
-            return ResponseEntity.status(409).build(); // Conflict - goal already exists
+            return ResponseEntity.status(404).build();
         }
     }
 

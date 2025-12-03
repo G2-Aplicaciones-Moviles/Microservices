@@ -2,6 +2,7 @@ package pe.edu.upc.tracking_service.tracking.application.internal.commandservice
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import pe.edu.upc.tracking_service.tracking.application.internal.outboundservices.acl.ExternalProfileService;
 import pe.edu.upc.tracking_service.tracking.application.internal.outboundservices.acl.ExternalUserProfileService;
 import pe.edu.upc.tracking_service.tracking.domain.model.Entities.MacronutrientValues;
 import pe.edu.upc.tracking_service.tracking.domain.model.Entities.TrackingGoal;
@@ -22,19 +23,21 @@ public class TrackingGoalCommandServiceImpl implements TrackingGoalCommandServic
     private final TrackingGoalRepository trackingGoalRepository;
     private final MacronutrientValuesRepository macronutrientValuesRepository;
     private final ExternalUserProfileService externalUserProfileService;
+    private final ExternalProfileService externalProfileService;
 
     public TrackingGoalCommandServiceImpl(TrackingGoalRepository trackingGoalRepository,
                                           MacronutrientValuesRepository macronutrientValuesRepository,
-                                          ExternalUserProfileService externalUserProfileService) {
+                                          ExternalUserProfileService externalUserProfileService,
+                                          ExternalProfileService externalProfileService) {
         this.trackingGoalRepository = trackingGoalRepository;
         this.macronutrientValuesRepository = macronutrientValuesRepository;
         this.externalUserProfileService = externalUserProfileService;
+        this.externalProfileService = externalProfileService;
     }
 
     @Override
     public Long handle(CreateTrackingGoalCommand command) {
-        // Validar que el perfil existe
-        externalUserProfileService.validateProfileExists(command.profile().userId());
+        externalUserProfileService.validateUserExists(command.profile());
 
         if (trackingGoalRepository.existsByUserId(command.profile())) {
             throw new IllegalArgumentException("Tracking goal already exists for user: " + command.profile());
@@ -47,8 +50,7 @@ public class TrackingGoalCommandServiceImpl implements TrackingGoalCommandServic
 
     @Override
     public void handle(UpdateTrackingGoalCommand command) {
-        // Validar que el perfil existe
-        externalUserProfileService.validateProfileExists(command.userId().userId());
+        externalUserProfileService.validateUserExists(command.userId());
 
         Optional<TrackingGoal> trackingGoalOpt = trackingGoalRepository.findByUserId(command.userId());
 
@@ -77,69 +79,97 @@ public class TrackingGoalCommandServiceImpl implements TrackingGoalCommandServic
     }
 
     /**
-     * Crea un tracking goal automáticamente basado en el objetivo del perfil
+     * Creates a tracking goal automatically based on the user's profile objective.
+     * Fetches detailed profile information from profiles-service and calculates macros.
      *
-     * @param profileId ID del perfil
-     * @return ID del tracking goal creado
+     * @param userId ID of the user
+     * @return ID of the created tracking goal
      */
-    public Long createTrackingGoalFromProfile(Long profileId) {
-        Optional<UserProfileDto> profileDtoOpt = externalUserProfileService.getUserProfileDtoById(profileId);
-        UserProfileDto profileDto = profileDtoOpt.orElseThrow(() ->
-                new IllegalArgumentException("UserProfile not found for id: " + profileId));
+    public Long createTrackingGoalFromProfile(Long userId) {
+        try {
+            System.out.println(">>> [TrackingGoal] Starting creation for userId: " + userId);
 
-        MacronutrientValues macros = CalorieCalculatorService.calculateTargetMacronutrients(profileDto);
+            // Validación 1: Usuario existe en IAM
+            System.out.println(">>> [TrackingGoal] Validating user exists in IAM...");
+            externalUserProfileService.validateUserExists(userId);
+            System.out.println(">>> [TrackingGoal] User exists in IAM ✓");
 
-        macronutrientValuesRepository.save(macros);
+            // Validación 2: Perfil existe en Profiles
+            System.out.println(">>> [TrackingGoal] Validating profile exists in Profiles...");
+            externalProfileService.validateProfileExists(userId);
+            System.out.println(">>> [TrackingGoal] Profile exists in Profiles ✓");
 
-        var command = new CreateTrackingGoalCommand(
-                new UserId(profileId),
-                macros
-        );
+            // Obtener datos del perfil
+            System.out.println(">>> [TrackingGoal] Fetching profile data...");
+            Optional<UserProfileDto> profileDtoOpt = externalProfileService.getUserProfileDtoByUserId(userId);
+            UserProfileDto profileDto = profileDtoOpt.orElseThrow(() -> {
+                System.err.println(">>> [TrackingGoal] ERROR: UserProfile not found for userId: " + userId);
+                return new IllegalArgumentException("UserProfile not found for userId: " + userId);
+            });
+            System.out.println(">>> [TrackingGoal] Profile data fetched ✓ (height=" + profileDto.heightMeters() +
+                             ", weight=" + profileDto.weightKg() + ", objective=" + profileDto.objectiveName() + ")");
 
-        return handle(command);
+            // Calcular macros
+            System.out.println(">>> [TrackingGoal] Calculating macronutrients...");
+            MacronutrientValues macros = CalorieCalculatorService.calculateTargetMacronutrients(profileDto);
+            System.out.println(">>> [TrackingGoal] Macros calculated ✓ (calories=" + macros.getCalories() +
+                             ", carbs=" + macros.getCarbs() + ", proteins=" + macros.getProteins() +
+                             ", fats=" + macros.getFats() + ")");
+
+            macronutrientValuesRepository.save(macros);
+            System.out.println(">>> [TrackingGoal] Macros saved to DB ✓");
+
+            // Crear comando y ejecutar
+            System.out.println(">>> [TrackingGoal] Creating tracking goal...");
+            var command = new CreateTrackingGoalCommand(new UserId(userId), macros);
+            Long goalId = handle(command);
+            System.out.println(">>> [TrackingGoal] Tracking goal created successfully ✓ (goalId=" + goalId + ")");
+
+            return goalId;
+        } catch (IllegalArgumentException e) {
+            System.err.println(">>> [TrackingGoal] VALIDATION ERROR for userId " + userId + ": " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            System.err.println(">>> [TrackingGoal] UNEXPECTED ERROR for userId " + userId + ": " + e.getMessage());
+            e.printStackTrace();
+            throw new IllegalArgumentException("Failed to create tracking goal: " + e.getMessage(), e);
+        }
     }
 
     /**
-     * Actualiza un tracking goal basado en el objetivo actual del perfil
+     * Updates a tracking goal based on the current profile objective.
+     * Fetches latest profile information from profiles-service and recalculates macros.
      *
-     * @param profileId ID del perfil
+     * @param userId ID of the user
      */
-    public void updateTrackingGoalFromProfile(Long profileId) {
-        Optional<UserProfileDto> profileDtoOpt = externalUserProfileService.getUserProfileDtoById(profileId);
+    public void updateTrackingGoalFromProfile(Long userId) {
+        externalUserProfileService.validateUserExists(userId);
+        externalProfileService.validateProfileExists(userId);
+
+        Optional<UserProfileDto> profileDtoOpt = externalProfileService.getUserProfileDtoByUserId(userId);
         UserProfileDto profileDto = profileDtoOpt.orElseThrow(() ->
-                new IllegalArgumentException("UserProfile not found for id: " + profileId));
+                new IllegalArgumentException("UserProfile not found for userId: " + userId));
 
         MacronutrientValues macros = CalorieCalculatorService.calculateTargetMacronutrients(profileDto);
-
         macronutrientValuesRepository.save(macros);
 
-        Optional<TrackingGoal> trackingGoalOpt = trackingGoalRepository.findByUserId(new UserId(profileId));
+        Optional<TrackingGoal> trackingGoalOpt = trackingGoalRepository.findByUserId(new UserId(userId));
         if (trackingGoalOpt.isEmpty()) {
-            throw new IllegalArgumentException("Tracking goal not found for user: " + profileId);
+            throw new IllegalArgumentException("Tracking goal not found for user: " + userId);
         }
         TrackingGoal trackingGoal = trackingGoalOpt.get();
 
-        try {
-            trackingGoal.updateTargetMacros(macros);
-        } catch (NoSuchMethodError e) {
-            try {
-                trackingGoal.setTargetMacros(macros);
-            } catch (Exception ignored) {
-            }
-        }
-
+        trackingGoal.updateTargetMacros(macros);
         trackingGoalRepository.save(trackingGoal);
     }
 
     /**
-     * Verifica si un tracking goal existe para un perfil
+     * Checks if a tracking goal exists for a user.
      *
-     * @param profileId ID del perfil
-     * @return true si existe, false en caso contrario
+     * @param userId ID of the user
+     * @return true if exists, false otherwise
      */
-    public boolean existsTrackingGoalForProfile(Long profileId) {
-        return trackingGoalRepository.existsByUserId(
-                new UserId(profileId)
-        );
+    public boolean existsTrackingGoalForProfile(Long userId) {
+        return trackingGoalRepository.existsByUserId(new UserId(userId));
     }
 }
