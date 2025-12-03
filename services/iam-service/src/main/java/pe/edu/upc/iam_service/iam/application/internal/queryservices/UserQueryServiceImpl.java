@@ -3,7 +3,7 @@ package pe.edu.upc.iam_service.iam.application.internal.queryservices;
 import org.springframework.stereotype.Service;
 import pe.edu.upc.iam_service.iam.domain.model.aggregates.User;
 import pe.edu.upc.iam_service.iam.domain.model.queries.GetAllUsersQuery;
-import pe.edu.upc.iam_service.iam.domain.model.queries.GetUserByEmailQuery;
+import pe.edu.upc.iam_service.iam.domain.model.queries.GetUserByUsernameQuery;
 import pe.edu.upc.iam_service.iam.domain.model.queries.GetUserByIdQuery;
 import pe.edu.upc.iam_service.iam.domain.services.UserQueryService;
 import pe.edu.upc.iam_service.iam.infrastructure.persistence.jpa.repositories.UserRepository;
@@ -30,7 +30,7 @@ public class UserQueryServiceImpl implements UserQueryService {
     }
 
     @Override
-    public Optional<User> handle(GetUserByEmailQuery query) {
-        return userRepository.findByEmail(query.email());
+    public Optional<User> handle(GetUserByUsernameQuery query) {
+        return userRepository.findByUsername(query.username());
     }
 }
