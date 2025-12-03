@@ -15,12 +15,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
 import pe.edu.upc.iam_service.iam.infrastructure.authorization.sfs.pipeline.BearerAuthorizationRequestFilter;
+import pe.edu.upc.iam_service.iam.infrastructure.authorization.sfs.pipeline.InternalServiceAuthenticationFilter;
 import pe.edu.upc.iam_service.iam.infrastructure.hashing.bcrypt.BCryptHashingService;
 import pe.edu.upc.iam_service.iam.infrastructure.tokens.jwt.BearerTokenService;
-
-import java.util.List;
 
 @Configuration
 @EnableMethodSecurity
@@ -45,6 +43,11 @@ public class WebSecurityConfiguration {
     @Bean
     public BearerAuthorizationRequestFilter authorizationRequestFilter() {
         return new BearerAuthorizationRequestFilter(tokenService, userDetailsService);
+    }
+
+    @Bean
+    public InternalServiceAuthenticationFilter internalServiceAuthenticationFilter() {
+        return new InternalServiceAuthenticationFilter();
     }
 
     @Bean
@@ -89,6 +92,7 @@ public class WebSecurityConfiguration {
                         ).permitAll()
                         .anyRequest().authenticated());
         http.authenticationProvider(authenticationProvider());
+        http.addFilterBefore(internalServiceAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(authorizationRequestFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
