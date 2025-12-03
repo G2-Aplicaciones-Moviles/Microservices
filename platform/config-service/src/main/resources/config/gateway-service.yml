@@ -69,6 +69,19 @@ spring:
           predicates:
             - Path=/iam-service/**,/api/v1/authentication/**,/api/v1/roles/**,/api/v1/users/**,/api/v1/jwks/**
 
+        - id: chat-service-route
+          uri: lb://chat-service
+          predicates:
+            - Path=/chat-service/**,/api/v1/chat/**,/api/v1/messages/**
+
+        - id: chat-service-websocket-route
+          uri: lb:ws://chat-service
+          predicates:
+            - Path=/ws/**
+          metadata:
+            connect-timeout: 30000
+            response-timeout: 30000
+
         - id: goals-service-route
           uri: lb://goals-service
           predicates:
@@ -113,6 +126,8 @@ springdoc:
     urls:
       - name: iam-service
         url: /iam-service/v3/api-docs
+      - name: chat-service
+        url: /chat-service/v3/api-docs
       - name: goals-service
         url: /goals-service/v3/api-docs
       - name: mealplan-service
