@@ -1,0 +1,205 @@
+services:
+  config-service:
+    image: "${ECR}/config-service:${TAG:-latest}"
+    container_name: config-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=native
+    healthcheck:
+      test: [ "CMD","curl","-f","http://localhost:8888/actuator/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 25
+    restart: unless-stopped
+
+  eureka-service:
+    image: "${ECR}/eureka-service:${TAG:-latest}"
+    container_name: eureka-service
+    depends_on:
+      config-service:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD","curl","-f","http://localhost:8761/actuator/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 25
+    restart: unless-stopped
+
+  iam-service:
+    image: "${ECR}/iam-service:${TAG:-latest}"
+    container_name: iam-service
+    depends_on:
+      eureka-service:
+        condition: service_healthy
+    env_file:
+      - /opt/jameofit/env/iam.env
+    environment:
+      - SPRING_CLOUD_CONFIG_RETRY_ENABLED=true
+      - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=40
+      - SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL=1000
+      - SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER=1.5
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/actuator/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 25
+    restart: unless-stopped
+
+  goals-service:
+    image: "${ECR}/goals-service:${TAG:-latest}"
+    container_name: goals-service
+    depends_on:
+      iam-service:
+        condition: service_healthy
+    env_file:
+      - /opt/jameofit/env/goals.env
+    environment:
+      - SPRING_CLOUD_CONFIG_RETRY_ENABLED=true
+      - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=40
+      - SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL=1000
+      - SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER=1.5
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8083/actuator/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 25
+    restart: unless-stopped
+
+  mealplan-service:
+    image: "${ECR}/mealplan-service:${TAG:-latest}"
+    container_name: mealplan-service
+    depends_on:
+      iam-service:
+        condition: service_healthy
+    env_file:
+      - /opt/jameofit/env/mealplan.env
+    environment:
+      - SPRING_CLOUD_CONFIG_RETRY_ENABLED=true
+      - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=40
+      - SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL=1000
+      - SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER=1.5
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8084/actuator/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 25
+    restart: unless-stopped
+
+  nutrition-service:
+    image: "${ECR}/nutrition-service:${TAG:-latest}"
+    container_name: nutrition-service
+    depends_on:
+      iam-service:
+        condition: service_healthy
+    env_file:
+      - /opt/jameofit/env/nutrition.env
+    environment:
+      - SPRING_CLOUD_CONFIG_RETRY_ENABLED=true
+      - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=40
+      - SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL=1000
+      - SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER=1.5
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8086/actuator/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 25
+    restart: unless-stopped
+
+  profile-service:
+    image: "${ECR}/profile-service:${TAG:-latest}"
+    container_name: profile-service
+    depends_on:
+      iam-service:
+        condition: service_healthy
+    env_file:
+      - /opt/jameofit/env/profile.env
+    environment:
+      - SPRING_CLOUD_CONFIG_RETRY_ENABLED=true
+      - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=40
+      - SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL=1000
+      - SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER=1.5
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8086/actuator/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 25
+    restart: unless-stopped
+
+  recipe-service:
+    image: "${ECR}/recipe-service:${TAG:-latest}"
+    container_name: recipe-service
+    depends_on:
+      iam-service:
+        condition: service_healthy
+    env_file:
+      - /opt/jameofit/env/recipe.env
+    environment:
+      - SPRING_CLOUD_CONFIG_RETRY_ENABLED=true
+      - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=40
+      - SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL=1000
+      - SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER=1.5
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8087/actuator/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 25
+    restart: unless-stopped
+
+  recommendation-service:
+    image: "${ECR}/recommendation-service:${TAG:-latest}"
+    container_name: recommendation-service
+    depends_on:
+      iam-service:
+        condition: service_healthy
+    env_file:
+      - /opt/jameofit/env/recommendation.env
+    environment:
+      - SPRING_CLOUD_CONFIG_RETRY_ENABLED=true
+      - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=40
+      - SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL=1000
+      - SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER=1.5
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8088/actuator/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 25
+    restart: unless-stopped
+
+  tracking-service:
+    image: "${ECR}/tracking-service:${TAG:-latest}"
+    container_name: tracking-service
+    depends_on:
+      iam-service:
+        condition: service_healthy
+    env_file:
+      - /opt/jameofit/env/tracking.env
+    environment:
+      - SPRING_CLOUD_CONFIG_RETRY_ENABLED=true
+      - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=40
+      - SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL=1000
+      - SPRING_CLOUD_CONFIG_RETRY_MULTIPLIER=1.5
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8089/actuator/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 25
+    restart: unless-stopped
+
+  gateway-service:
+    image: "${ECR}/gateway-service:${TAG:-latest}"
+    container_name: gateway-service
+    depends_on:
+      eureka-service:
+        condition: service_healthy
+      iam-service:
+        condition: service_healthy
+      fleet-service:
+        condition: service_healthy
+      delivery-service:
+        condition: service_healthy
+    ports: [ "80:8080" ]
+    healthcheck:
+      test: [ "CMD","curl","-f","http://localhost:8080/actuator/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 25
+    restart: unless-stopped

@@ -31,3 +31,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Environment Files ###
+docker/.env
+
+### Seguridad: Ignorar llaves RSA ###
+*.key
+*.pub
+*.pem
+*.pkcs8

@@ -1,0 +1,13 @@
+package pe.edu.upc.profiles_service.profiles.application.internal.outboundservices.acl.rest.resource;
+
+import java.util.List;
+
+/**
+ * DTO for user information from iam-service.
+ *
+ * @param id       the user ID
+ * @param username the username
+ * @param roles    the list of roles assigned to the user
+ */
+public record UserResource(Long id, String username, List<String> roles) {
+}

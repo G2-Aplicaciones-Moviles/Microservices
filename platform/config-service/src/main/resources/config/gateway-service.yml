@@ -1,0 +1,148 @@
+server:
+  port: 8080  # Puerto del API Gateway
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-service:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: false
+    hostname: gateway-service
+
+spring:
+  security:
+    oauth2:
+      resource-server:
+        jwt:
+          jwk-set-uri: "http://iam-service:8081/api/v1/jwks/.well-known/jwks.json"
+
+  cloud:
+    gateway:
+      global-cors:
+        add-to-simple-url-handler-mapping: true
+        corsConfigurations:
+          '[/**]':
+            allowedOriginPatterns:
+              - "http://localhost:*"
+              - "http://127.0.0.1:*"
+              - "http://10.0.2.2:*"
+              - "http://192.168.*.*"
+              - "https://*.web.app"
+              - "https://*.firebaseapp.com"
+              - "capacitor://localhost"  # Capacitor apps
+              - "ionic://localhost"       # Ionic apps
+              - "http://localhost"        # Android emulador/desarrollo
+              - "https://*.firebaseapp.com" # Firebase App Distribution
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+              - HEAD
+            allowedHeaders:
+              - "*"
+              - "Authorization"
+              - "Content-Type"
+              - "Accept"
+              - "Origin"
+              - "X-Requested-With"
+              - "Access-Control-Request-Method"
+              - "Access-Control-Request-Headers"
+            exposedHeaders:
+              - "*"
+              - "Authorization"
+              - "Content-Type"
+              - "X-Total-Count"
+            allowCredentials: true
+            maxAge: 3600
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: iam-service-route
+          uri: lb://iam-service
+          predicates:
+            - Path=/iam-service/**,/api/v1/authentication/**,/api/v1/roles/**,/api/v1/users/**,/api/v1/jwks/**
+
+        - id: chat-service-route
+          uri: lb://chat-service
+          predicates:
+            - Path=/chat-service/**,/api/v1/chat/**,/api/v1/messages/**
+
+        - id: chat-service-websocket-route
+          uri: lb:ws://chat-service
+          predicates:
+            - Path=/ws/**
+          metadata:
+            connect-timeout: 30000
+            response-timeout: 30000
+
+        - id: goals-service-route
+          uri: lb://goals-service
+          predicates:
+            - Path=/goals-service/**,/api/v1/goals/**
+
+        - id: mealplan-service-route
+          uri: lb://mealplan-service
+          predicates:
+            - Path=/mealplan-service/**,/api/v1/meal-plan/**
+
+        - id: nutritionist-service-route
+          uri: lb://nutritionist-service
+          predicates:
+            - Path=/nutritionist-service/**,/api/v1/nutritionists/**,/api/v1/nutritionist-patients/**
+
+        - id: profiles-service-route
+          uri: lb://profiles-service
+          predicates:
+            - Path=/profiles-service/**,/api/v1/user-profiles/**,/api/v1/profiles/**,/api/v1/objectives/**,/api/v1/allergies/**,/api/v1/activity-levels/**
+
+        - id: recipes-service-route
+          uri: lb://recipes-service
+          predicates:
+            - Path=/recipes-service/**,/api/v1/recipes/**,/api/v1/recipe-types/**,/api/v1/ingredients/**,/api/v1/favorite-recipes/**,/api/v1/categories/**
+
+        - id: recommendations-service-route
+          uri: lb://recommendations-service
+          predicates:
+            - Path=/recommendations-service/**,/api/v1/recommendations/**,/api/v1/recommendation-templates/**
+
+        - id: tracking-service-route
+          uri: lb://tracking-service
+          predicates:
+            - Path=/tracking-service/**,/api/v1/tracking-goals/**,/api/v1/tracking/**,/api/v1/meal-plan-entries/**,/api/v1/macronutrients/**
+
+
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      - name: iam-service
+        url: /iam-service/v3/api-docs
+      - name: chat-service
+        url: /chat-service/v3/api-docs
+      - name: goals-service
+        url: /goals-service/v3/api-docs
+      - name: mealplan-service
+        url: /mealplan-service/v3/api-docs
+      - name: nutritionist-service
+        url: /nutritionist-service/v3/api-docs
+      - name: profiles-service
+        url: /profiles-service/v3/api-docs
+      - name: recipes-service
+        url: /recipes-service/v3/api-docs
+      - name: recommendations-service
+        url: /recommendations-service/v3/api-docs
+      - name: tracking-service
+        url: /tracking-service/v3/api-docs
+
+management:
+  endpoints.web.exposure.include: health,info
+  endpoint.health.probes.enabled: true
