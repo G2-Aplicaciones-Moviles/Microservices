@@ -19,7 +19,7 @@ spring:
       database: ${MONGO_DATABASE:chat_db}
       username: ${MONGO_USER:}
       password: ${MONGO_PASSWORD:}
-      authentication-database: ${MONGO_AUTH_DB:admin}
+      authentication-database: ${MONGO_AUTH_DB:chat_db}
 
 springdoc:
   api-docs:
