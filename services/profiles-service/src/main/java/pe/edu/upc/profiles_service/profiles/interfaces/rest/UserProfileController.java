@@ -47,6 +47,17 @@ public class UserProfileController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<UserProfileResource> getByUserId(@PathVariable Long userId) {
+        var profiles = queryService.handle(new GetAllUserProfilesQuery());
+        return profiles.stream()
+                .filter(profile -> profile.getUserId().equals(userId))
+                .findFirst()
+                .map(UserProfileResourceFromEntityAssembler::toResourceFromEntity)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @PostMapping
     public ResponseEntity<UserProfileResource> create(@RequestBody CreateUserProfileResource resource) {
         var command = CreateUserProfileCommandFromResourceAssembler.toCommandFromResource(resource);

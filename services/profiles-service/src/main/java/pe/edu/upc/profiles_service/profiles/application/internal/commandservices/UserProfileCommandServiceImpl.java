@@ -1,12 +1,15 @@
 package pe.edu.upc.profiles_service.profiles.application.internal.commandservices;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.edu.upc.profiles_service.profiles.application.internal.outboundservices.ExternalUserService;
+import pe.edu.upc.profiles_service.profiles.application.internal.outboundservices.acl.ExternalTrackingService;
 import pe.edu.upc.profiles_service.profiles.domain.model.aggregates.UserProfile;
 import pe.edu.upc.profiles_service.profiles.domain.model.commands.CreateUserProfileCommand;
 import pe.edu.upc.profiles_service.profiles.domain.model.commands.DeleteUserProfileCommand;
 import pe.edu.upc.profiles_service.profiles.domain.model.commands.UpdateUserProfileCommand;
+import pe.edu.upc.profiles_service.profiles.domain.model.events.UserProfileCreatedEvent;
 import pe.edu.upc.profiles_service.profiles.domain.services.UserProfileCommandService;
 import pe.edu.upc.profiles_service.profiles.infrastructure.persistence.jpa.repositories.*;
 
@@ -20,17 +23,23 @@ public class UserProfileCommandServiceImpl implements UserProfileCommandService 
     private final ObjectiveRepository objectiveRepository;
     private final AllergyRepository allergyRepository;
     private final ExternalUserService externalUserService;
+    private final ExternalTrackingService externalTrackingService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public UserProfileCommandServiceImpl(UserProfileRepository userProfileRepository,
                                          ActivityLevelRepository activityLevelRepository,
                                          ObjectiveRepository objectiveRepository,
                                          AllergyRepository allergyRepository,
-                                         ExternalUserService externalUserService) {
+                                         ExternalUserService externalUserService,
+                                         ExternalTrackingService externalTrackingService,
+                                         ApplicationEventPublisher eventPublisher) {
         this.userProfileRepository = userProfileRepository;
         this.activityLevelRepository = activityLevelRepository;
         this.objectiveRepository = objectiveRepository;
         this.allergyRepository = allergyRepository;
         this.externalUserService = externalUserService;
+        this.externalTrackingService = externalTrackingService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -58,6 +67,12 @@ public class UserProfileCommandServiceImpl implements UserProfileCommandService 
         }
 
         var savedProfile = userProfileRepository.save(userProfile);
+
+        System.out.println(">>> [Profiles] UserProfile created for userId: " + command.userId() + ", profileId: " + savedProfile.getId());
+
+        eventPublisher.publishEvent(new UserProfileCreatedEvent(command.userId(), savedProfile.getId().intValue()));
+        System.out.println(">>> [Profiles] UserProfileCreatedEvent published for userId: " + command.userId());
+
         return savedProfile.getId().intValue();
     }
 

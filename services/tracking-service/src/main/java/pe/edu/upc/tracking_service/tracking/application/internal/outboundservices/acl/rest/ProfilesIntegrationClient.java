@@ -30,5 +30,15 @@ public interface ProfilesIntegrationClient {
      */
     @GetMapping("/{userProfileId}")
     UserProfileResource getUserProfileById(@PathVariable("userProfileId") int userProfileId);
+
+    /**
+     * Retrieves a user profile by user ID from profiles-service.
+     *
+     * @param userId the user ID
+     * @return the user profile resource
+     * @throws feign.FeignException.NotFound if the user profile is not found
+     */
+    @GetMapping("/user/{userId}")
+    UserProfileResource getUserProfileByUserId(@PathVariable("userId") Long userId);
 }
 

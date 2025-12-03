@@ -2,31 +2,30 @@ package pe.edu.upc.tracking_service.tracking.application.internal.outboundservic
 
 import feign.FeignException;
 import org.springframework.stereotype.Service;
-import pe.edu.upc.tracking_service.tracking.application.internal.outboundservices.acl.rest.ProfilesIntegrationClient;
-import pe.edu.upc.tracking_service.tracking.application.internal.outboundservices.acl.rest.resource.UserProfileResource;
-import pe.edu.upc.tracking_service.tracking.domain.model.dto.UserProfileDto;
+import pe.edu.upc.tracking_service.tracking.application.internal.outboundservices.acl.rest.IamIntegrationClient;
+import pe.edu.upc.tracking_service.tracking.application.internal.outboundservices.acl.rest.resource.UserResource;
 import pe.edu.upc.tracking_service.tracking.domain.model.valueobjects.UserId;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
- * Service to communicate with profiles-service via Feign Client.
+ * Service to communicate with iam-service via Feign Client.
+ * Uses IAM as source of truth for user existence validation.
  */
 @Service
 public class ExternalUserProfileService {
 
-    private final ProfilesIntegrationClient profilesClient;
+    private final IamIntegrationClient iamClient;
 
-    public ExternalUserProfileService(ProfilesIntegrationClient profilesClient) {
-        this.profilesClient = profilesClient;
+    public ExternalUserProfileService(IamIntegrationClient iamClient) {
+        this.iamClient = iamClient;
     }
 
     /**
-     * Checks if a user profile exists by userId.
+     * Checks if a user exists by userId in IAM service.
      *
      * @param userId the user ID value object
-     * @return true if the user profile exists, false otherwise
+     * @return true if the user exists, false otherwise
      */
     public boolean existsByUserId(UserId userId) {
         if (userId == null || userId.userId() == null) {
@@ -34,110 +33,78 @@ public class ExternalUserProfileService {
         }
 
         try {
-            List<UserProfileResource> profiles = profilesClient.getAllUserProfiles();
-            return profiles.stream()
-                    .anyMatch(profile -> userId.userId().equals((long) profile.id()));
+            UserResource user = iamClient.getUserById(userId.userId());
+            return user != null && user.username() != null && !user.username().isEmpty();
+        } catch (FeignException.NotFound e) {
+            return false;
         } catch (Exception e) {
-            System.err.println("Error checking user profile existence by userId: " + e.getMessage());
+            System.err.println("Error checking user existence by userId in IAM: " + e.getMessage());
             return false;
         }
     }
 
     /**
-     * Retrieves a user profile by ID.
+     * Retrieves a user by ID from IAM service.
      *
-     * @param profileId the profile ID
-     * @return an Optional containing the user profile if found, empty otherwise
+     * @param userId the user ID
+     * @return an Optional containing the user if found, empty otherwise
      */
-    public Optional<UserProfileResource> getUserProfileById(Long profileId) {
+    public Optional<UserResource> getUserById(Long userId) {
         try {
-            UserProfileResource profile = profilesClient.getUserProfileById(profileId.intValue());
-            return Optional.of(profile);
+            UserResource user = iamClient.getUserById(userId);
+            return Optional.of(user);
         } catch (FeignException.NotFound e) {
             return Optional.empty();
         } catch (Exception e) {
-            System.err.println("Error fetching user profile by ID: " + e.getMessage());
+            System.err.println("Error fetching user by ID from IAM: " + e.getMessage());
             return Optional.empty();
         }
     }
 
     /**
-     * Retrieves a user profile DTO by ID for tracking calculations.
+     * Checks if a user exists by ID in IAM service.
      *
-     * @param profileId the profile ID
-     * @return an Optional containing the user profile DTO if found, empty otherwise
+     * @param userId the user ID
+     * @return true if the user exists, false otherwise
      */
-    public Optional<UserProfileDto> getUserProfileDtoById(Long profileId) {
-        return getUserProfileById(profileId).map(this::mapToDto);
-    }
+    public boolean existsUser(Long userId) {
+        if (userId == null || userId <= 0) {
+            return false;
+        }
 
-    /**
-     * Checks if a profile exists by ID.
-     *
-     * @param profileId the profile ID
-     * @return true if the profile exists, false otherwise
-     */
-    public boolean existsProfile(Long profileId) {
         try {
-            profilesClient.getUserProfileById(profileId.intValue());
+            iamClient.getUserById(userId);
             return true;
         } catch (FeignException.NotFound e) {
             return false;
         } catch (Exception e) {
-            System.err.println("Error checking profile existence by ID: " + e.getMessage());
+            System.err.println("Error checking user existence by ID in IAM: " + e.getMessage());
             return false;
         }
     }
 
     /**
-     * Validates that a profile exists, throws exception if not found.
+     * Validates that a user exists in IAM, throws exception if not found.
      *
-     * @param profileId the profile ID to validate
-     * @throws IllegalArgumentException if the profile does not exist
+     * @param userId the user ID to validate
+     * @throws IllegalArgumentException if the user does not exist
      */
-    public void validateProfileExists(Long profileId) {
-        if (!existsProfile(profileId)) {
-            throw new IllegalArgumentException("Profile not found with ID: " + profileId);
+    public void validateUserExists(Long userId) {
+        if (!existsUser(userId)) {
+            throw new IllegalArgumentException("User not found in IAM with ID: " + userId);
         }
     }
 
     /**
-     * Maps UserProfileResource to UserProfileDto for tracking calculations.
+     * Validates that a user exists using UserId value object.
      *
-     * @param resource the user profile resource
-     * @return the user profile DTO
+     * @param userId the user ID value object
+     * @throws IllegalArgumentException if the user does not exist
      */
-    private UserProfileDto mapToDto(UserProfileResource resource) {
-        double activityFactor = calculateActivityFactor(resource.activityLevelName());
-
-        return new UserProfileDto(
-                (long) resource.id(),
-                resource.gender(),
-                resource.height() != null ? resource.height() : 0.0,
-                resource.weight() != null ? resource.weight() : 0.0,
-                activityFactor,
-                resource.objectiveName(),
-                resource.birthDate()
-        );
-    }
-
-    /**
-     * Calculates activity factor from activity level string.
-     *
-     * @param activityLevel the activity level string
-     * @return the activity factor
-     */
-    private double calculateActivityFactor(String activityLevel) {
-        if (activityLevel == null) {
-            return 1.2;
+    public void validateUserExists(UserId userId) {
+        if (userId == null || userId.userId() == null) {
+            throw new IllegalArgumentException("UserId cannot be null");
         }
-
-        return switch (activityLevel.toUpperCase()) {
-            case "LIGHT", "LIGERO" -> 1.375;
-            case "MODERATE", "MODERADO" -> 1.55;
-            case "ACTIVE", "ACTIVO" -> 1.725;
-            case "VERY_ACTIVE", "MUY_ACTIVO" -> 1.9;
-            default -> 1.2;
-        };
+        validateUserExists(userId.userId());
     }
 }
