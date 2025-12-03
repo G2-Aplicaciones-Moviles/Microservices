@@ -42,15 +42,15 @@ public class TokenServiceImpl implements BearerTokenService {
         return jwtKeyProvider.getPublicKey();
     }
 
-    private String buildTokenWithDefaultParameters(String email) {
+    private String buildTokenWithDefaultParameters(String username) {
         var issuedAt = new Date();
         var expiration = DateUtils.addDays(issuedAt, expirationDays);
-        var key = getSigningKey(); // Esto ahora devuelve una PrivateKey
+        var key = getSigningKey();
         return Jwts.builder()
-                .subject(email)
+                .subject(username)
                 .issuedAt(issuedAt)
                 .expiration(expiration)
-                .signWith(key, Jwts.SIG.RS256) // <-- ¡CAMBIO CLAVE! Especifica el algoritmo RS256
+                .signWith(key, Jwts.SIG.RS256)
                 .compact();
     }
 
@@ -83,8 +83,8 @@ public class TokenServiceImpl implements BearerTokenService {
     }
 
     @Override
-    public String generateToken(String email) {
-        return buildTokenWithDefaultParameters(email);
+    public String generateToken(String username) {
+        return buildTokenWithDefaultParameters(username);
     }
 
     private boolean isTokenPresentIn(String authorizationParameter) {
@@ -132,7 +132,7 @@ public class TokenServiceImpl implements BearerTokenService {
     }
 
     @Override
-    public String getEmailFromToken(String token) {
+    public String getUsernameFromToken(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
